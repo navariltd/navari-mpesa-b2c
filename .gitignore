@@ -2,6 +2,14 @@
 *.pyc
 *.egg-info
 *.swp
+*.rest
+
+*.pem
+*.cer
+
+logfile.txt
 tags
-node_modules
-__pycache__
+
+csf_ke/docs/current
+/.vscode
+/__pycache__/

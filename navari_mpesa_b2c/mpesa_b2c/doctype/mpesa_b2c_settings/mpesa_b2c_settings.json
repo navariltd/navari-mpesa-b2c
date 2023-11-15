@@ -1,0 +1,126 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "creation": "2023-10-30 10:51:27.687329",
+  "default_view": "List",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "title",
+    "consumer_key",
+    "initiator_name",
+    "results_url",
+    "authorization_url",
+    "column_break_it7j",
+    "organisation_shortcode",
+    "consumer_secret",
+    "initiator_password",
+    "queue_timeout_url",
+    "payment_url",
+    "section_break_tos4",
+    "certificate_file"
+  ],
+  "fields": [
+    {
+      "fieldname": "title",
+      "fieldtype": "Data",
+      "label": "Title"
+    },
+    {
+      "fieldname": "consumer_key",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Consumer Key",
+      "reqd": 1
+    },
+    {
+      "fieldname": "initiator_name",
+      "fieldtype": "Data",
+      "label": "Initiator Name"
+    },
+    {
+      "description": "Mandatory Format: (http|https)://domain/api/method/csf_ke.csf_ke.doctype.b2c_payment.b2c_payment.results_callback_url",
+      "fieldname": "results_url",
+      "fieldtype": "Data",
+      "label": "Results URL"
+    },
+    {
+      "description": "Mandatory Format: (http|https)://domain.*",
+      "fieldname": "authorization_url",
+      "fieldtype": "Data",
+      "label": "Authorization URL",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_it7j",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "organisation_shortcode",
+      "fieldtype": "Data",
+      "label": "Organisation ShortCode",
+      "reqd": 1
+    },
+    {
+      "fieldname": "consumer_secret",
+      "fieldtype": "Password",
+      "in_list_view": 1,
+      "label": "Consumer Secret",
+      "reqd": 1
+    },
+    {
+      "fieldname": "initiator_password",
+      "fieldtype": "Password",
+      "label": "Initiator Password",
+      "reqd": 1
+    },
+    {
+      "description": "Mandatory Format: (http|https)://domain/api/method/csf_ke.csf_ke.doctype.b2c_payment.b2c_payment.queue_timeout_url",
+      "fieldname": "queue_timeout_url",
+      "fieldtype": "Data",
+      "label": "Queue TimeOut URL"
+    },
+    {
+      "description": "Mandatory Format: (http|https)://domain.*",
+      "fieldname": "payment_url",
+      "fieldtype": "Data",
+      "label": "Payment URL",
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_break_tos4",
+      "fieldtype": "Section Break"
+    },
+    {
+      "description": "A Certificate file (.cer or .pem) received from Safaricom.",
+      "fieldname": "certificate_file",
+      "fieldtype": "Attach",
+      "label": "Authorisation Certificate File",
+      "reqd": 1
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "issingle": 1,
+  "links": [],
+  "modified": "2023-11-15 10:42:57.886201",
+  "modified_by": "Administrator",
+  "module": "MPesa B2C",
+  "name": "MPesa B2C Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "print": 1,
+      "read": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}
