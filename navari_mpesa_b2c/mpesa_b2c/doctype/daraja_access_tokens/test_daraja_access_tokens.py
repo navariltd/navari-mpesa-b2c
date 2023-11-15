@@ -1,17 +1,22 @@
-# Copyright (c) 2023, Navari Limited and Contributors
-# See license.txt
+# # Copyright (c) 2023, Navari Limited and Contributors
+# # See license.txt
 
 import datetime
-from unittest.mock import patch
+import json
+from unittest.mock import MagicMock, patch
 
 import frappe
 import requests
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils.password import get_decrypted_password
 
-from ..csf_ke_custom_exceptions import InvalidTokenExpiryTime
+from ..csf_ke_custom_exceptions import InvalidTokenExpiryTimeError
 from ..mpesa_b2c_payment import mpesa_b2c_payment
-from ..mpesa_b2c_payment.mpesa_b2c_payment import get_hashed_token
+from ..mpesa_b2c_payment.mpesa_b2c_payment import (
+    get_access_tokens,
+    get_hashed_token,
+    save_access_token_to_database,
+)
 
 TOKEN_ACCESS_TIME = datetime.datetime.now()
 
@@ -88,7 +93,7 @@ class TestDarajaAccessTokens(FrappeTestCase):
 
     def test_expiry_time_earlier_than_fetch_time(self) -> None:
         """Test expiry time being early than fetch time"""
-        with self.assertRaises(InvalidTokenExpiryTime):
+        with self.assertRaises(InvalidTokenExpiryTimeError):
             frappe.get_doc(
                 {
                     "doctype": "Daraja Access Tokens",
@@ -126,9 +131,60 @@ class TestDarajaAccessTokens(FrappeTestCase):
         self.assertEqual(token["expires_in"], "3599")
         self.assertEqual(status_code, 200)
 
-    def test_get_access_tokens_error_response(self) -> None:
-        """Tests instances the get_access_tokens() function from the b2c_payment module fails"""
+    @patch.object(mpesa_b2c_payment.requests, "get", side_effect=requests.HTTPError)
+    def test_get_access_tokens_error_response(self, mock_request: MagicMock) -> None:
+        """
+        Tests instances the get_access_tokens() function from the b2c_payment receives an error response
+        """
+        response = None
+
         with self.assertRaises(requests.HTTPError):
-            mpesa_b2c_payment.get_access_tokens(
+            response = get_access_tokens(
                 "123456789", "secret", "https://example.com/authorise"
             )
+
+        self.assertIsNone(response)
+
+    @patch.object(
+        mpesa_b2c_payment.requests,
+        "get",
+        side_effect=requests.exceptions.ConnectionError,
+    )
+    def test_get_access_tokens_connection_error(self, mock_request: MagicMock) -> None:
+        """
+        Tests instances the get_access_tokens() function from the mpesa_b2c_payment fails to connect
+        """
+        response = None
+
+        with self.assertRaises(requests.exceptions.ConnectionError):
+            response = get_access_tokens(
+                "123456789", "secret", "https://257.257.257.257/welcome"
+            )
+
+        self.assertIsNone(response)
+
+    def test_save_access_token_to_database(self) -> None:
+        """Tests saving access token to database"""
+        response = json.dumps(
+            {
+                "access_token": "987abc321xyz",
+                "expires_in": "600",
+            }
+        )
+        saved_token = save_access_token_to_database(response)
+
+        hashed_token = frappe.db.sql(
+            """
+            SELECT name
+            FROM `tabDaraja Access Tokens`
+            ORDER BY creation DESC
+            LIMIT 1
+            """,
+            as_dict=True,
+        )
+        token = get_decrypted_password(
+            "Daraja Access Tokens", hashed_token[0].name, "access_token"
+        )
+
+        self.assertEqual(saved_token, "987abc321xyz")
+        self.assertEqual(token, "987abc321xyz")

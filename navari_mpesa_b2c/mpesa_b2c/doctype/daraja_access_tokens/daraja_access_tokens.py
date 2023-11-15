@@ -3,7 +3,7 @@
 
 from frappe.model.document import Document
 
-from ..csf_ke_custom_exceptions import InvalidTokenExpiryTime
+from ..csf_ke_custom_exceptions import InvalidTokenExpiryTimeError
 from .. import api_logger
 
 
@@ -16,6 +16,6 @@ class DarajaAccessTokens(Document):
             api_logger.error(
                 "Access Token Expiry time cannot be same or early than the fetch time"
             )
-            raise InvalidTokenExpiryTime(
+            raise InvalidTokenExpiryTimeError(
                 "Access Token Expiry time cannot be same or early than the fetch time"
             )

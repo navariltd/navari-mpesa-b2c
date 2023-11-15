@@ -13,7 +13,7 @@ class IncorrectStatusError(Exception):
     """Raised when status is Errored but no errod description or error code has been supplied"""
 
 
-class InvalidTokenExpiryTime(Exception):
+class InvalidTokenExpiryTimeError(Exception):
     """
     Raised when the access token's expiry time is earlier
     or the same as the access token's fetch time.

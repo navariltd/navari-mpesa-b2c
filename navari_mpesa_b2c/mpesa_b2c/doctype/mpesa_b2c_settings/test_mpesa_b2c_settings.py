@@ -4,11 +4,53 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
-from ..mpesa_b2c_payment.mpesa_b2c_payment import get_b2c_settings, get_certificate_file
+from ..mpesa_b2c_payment.mpesa_b2c_payment import (
+    get_b2c_settings,
+    get_certificate_file,
+    generate_payload,
+)
 from ..csf_ke_custom_exceptions import (
     InvalidAuthenticationCertificateFileError,
     InvalidURLError,
 )
+
+SUCCESSFUL_TEST_RESULTS = {
+    "Result": {
+        "ResultType": 0,
+        "ResultCode": 0,
+        "ResultDesc": "The service request is processed successfully.",
+        "OriginatorConversationID": "1e0ee138-1398-4df9-aeb0-a44c1c9ee0af",
+        "ConversationID": "e068d912-f16c-439f-9c31-6304f504d2db",
+        "TransactionID": "NOD47HAY4AB",
+        "ResultParameters": {
+            "ResultParameter": [
+                {"Key": "TransactionAmount", "Value": 11},
+                {"Key": "TransactionReceipt", "Value": "NOD47HAY4AB"},
+                {"Key": "B2CRecipientIsRegisteredCustomer", "Value": "Y"},
+                {
+                    "Key": "B2CChargesPaidAccountAvailableFunds",
+                    "Value": -4510.00,
+                },
+                {
+                    "Key": "ReceiverPartyPublicName",
+                    "Value": "254708374149 - John Doe",
+                },
+                {
+                    "Key": "TransactionCompletedDateTime",
+                    "Value": "07.11.2023 11:45:50",
+                },
+                {"Key": "B2CUtilityAccountAvailableFunds", "Value": 10116.00},
+                {"Key": "B2CWorkingAccountAvailableFunds", "Value": 900000.00},
+            ]
+        },
+        "ReferenceData": {
+            "ReferenceItem": {
+                "Key": "QueueTimeoutURL",
+                "Value": "https:\/\/internalsandbox.safaricom.co.ke\/mpesa\/b2cresults\/v1\/submit",
+            }
+        },
+    }
+}
 
 
 def create_b2c_settings():
@@ -139,3 +181,35 @@ class TestMPesaB2CSettings(FrappeTestCase):
         certificate = get_certificate_file(certificate_file_path)
 
         self.assertTrue(certificate, certificate.endswith(certificate_file_path))
+
+    def test_generate_payload(self) -> None:
+        """Tests generate_payload() function in mpesa_b2c_payment module"""
+        originator_conversation_id = "b4a300e2-e250-44b5-a41b-70fa4d3c3a69"
+        partial_payload = {
+            "name": "MPESA-B2C-999999999999999999",
+            "OriginatorConversationID": originator_conversation_id,
+            "CommandID": "SalaryPayment",
+            "Amount": 10,
+            "PartyB": "254712345678",
+            "Remarks": "testing remarks",
+            "Occassion": "testing",
+        }
+        security_credentials = "abcdefghijklmnop"
+        b2c_settings = frappe.db.get_singles_dict("MPesa B2C Settings")
+
+        payload = generate_payload(b2c_settings, partial_payload, security_credentials)
+
+        self.assertIsInstance(payload, str)
+        self.assertTrue('"name": "MPESA-B2C-999999999999999999"' in payload)
+        self.assertTrue(
+            '"OriginatorConversationID": "b4a300e2-e250-44b5-a41b-70fa4d3c3a69"'
+            in payload
+        )
+        self.assertTrue('"PartyB": "254712345678"' in payload)
+        self.assertTrue(
+            '"ResultURL": "https://example.com/api/method/handler"' in payload
+        )
+        self.assertTrue(
+            '"QueueTimeOutURL": "https://example.com/api/method/handler"' in payload
+        )
+        self.assertTrue('"InitiatorName": "tester"' in payload)

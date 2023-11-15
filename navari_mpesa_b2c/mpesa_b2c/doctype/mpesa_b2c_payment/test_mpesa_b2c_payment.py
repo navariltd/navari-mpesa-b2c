@@ -4,6 +4,7 @@
 
 import frappe
 import pymysql
+import datetime
 from frappe.tests.utils import FrappeTestCase
 
 from ..csf_ke_custom_exceptions import (
@@ -11,6 +12,45 @@ from ..csf_ke_custom_exceptions import (
     InsufficientPaymentAmountError,
     InvalidReceiverMobileNumberError,
 )
+from ..mpesa_b2c_payment.mpesa_b2c_payment import extract_transaction_values
+
+SUCCESSFUL_TEST_RESULTS = {
+    "Result": {
+        "ResultType": 0,
+        "ResultCode": 0,
+        "ResultDesc": "The service request is processed successfully.",
+        "OriginatorConversationID": "1e0ee138-1398-4df9-aeb0-a44c1c9ee0af",
+        "ConversationID": "e068d912-f16c-439f-9c31-6304f504d2db",
+        "TransactionID": "NOD47HAY4AB",
+        "ResultParameters": {
+            "ResultParameter": [
+                {"Key": "TransactionAmount", "Value": 11},
+                {"Key": "TransactionReceipt", "Value": "NOD47HAY4AB"},
+                {"Key": "B2CRecipientIsRegisteredCustomer", "Value": "Y"},
+                {
+                    "Key": "B2CChargesPaidAccountAvailableFunds",
+                    "Value": -4510.00,
+                },
+                {
+                    "Key": "ReceiverPartyPublicName",
+                    "Value": "254708374149 - John Doe",
+                },
+                {
+                    "Key": "TransactionCompletedDateTime",
+                    "Value": "07.11.2023 11:45:50",
+                },
+                {"Key": "B2CUtilityAccountAvailableFunds", "Value": 10116.00},
+                {"Key": "B2CWorkingAccountAvailableFunds", "Value": 900000.00},
+            ]
+        },
+        "ReferenceData": {
+            "ReferenceItem": {
+                "Key": "QueueTimeoutURL",
+                "Value": "https:\/\/internalsandbox.safaricom.co.ke\/mpesa\/b2cresults\/v1\/submit",
+            }
+        },
+    }
+}
 
 
 def create_mpesa_b2c_payment() -> None:
@@ -199,3 +239,35 @@ class TestMPesaB2CPayment(FrappeTestCase):
         ).insert()
 
         self.assertEqual(new_doc.status, "Not Initiated")
+
+    def test_extract_transaction_values(self) -> None:
+        """Tests extract_transaction_values() from the mpesa_b2c_payment module"""
+        transaction_values = extract_transaction_values(
+            SUCCESSFUL_TEST_RESULTS["Result"]["ResultParameters"]["ResultParameter"],
+            SUCCESSFUL_TEST_RESULTS["Result"]["TransactionID"],
+        )
+
+        self.assertIsInstance(transaction_values, dict)
+        self.assertEqual(len(transaction_values), 8)
+        self.assertEqual(
+            transaction_values["recipient_is_registered_customer"],
+            SUCCESSFUL_TEST_RESULTS["Result"]["ResultParameters"]["ResultParameter"][2][
+                "Value"
+            ],
+        )
+        self.assertEqual(
+            transaction_values["receiver_public_name"],
+            SUCCESSFUL_TEST_RESULTS["Result"]["ResultParameters"]["ResultParameter"][4][
+                "Value"
+            ],
+        )
+        transaction_completed_datetime = datetime.datetime.strptime(
+            transaction_values["transaction_completed_datetime"][:-4],
+            "%Y-%m-%d %H:%M:%S",
+        ).strftime("%d.%m.%Y %H:%M:%S")
+        self.assertEqual(
+            transaction_completed_datetime,
+            SUCCESSFUL_TEST_RESULTS["Result"]["ResultParameters"]["ResultParameter"][5][
+                "Value"
+            ],
+        )

@@ -223,9 +223,10 @@ def save_access_token_to_database(response: str) -> str:
     expiry_time = datetime.datetime.now() + datetime.timedelta(
         seconds=int(response.get("expires_in"))
     )
+    access_token = response.get("access_token")
 
     new_token = frappe.new_doc("Daraja Access Tokens")
-    new_token.access_token = response.get("access_token")
+    new_token.access_token = access_token
     new_token.expiry_time = expiry_time
     new_token.token_fetch_time = token_fetch_time
     new_token.save()
@@ -235,7 +236,7 @@ def save_access_token_to_database(response: str) -> str:
         token_fetch_time,
         expiry_time,
     )
-    return response.get("access_token")
+    return access_token
 
 
 def get_certificate_file(certificate_path: str) -> str | Literal[-1]:
