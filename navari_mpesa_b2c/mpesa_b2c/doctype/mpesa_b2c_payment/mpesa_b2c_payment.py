@@ -20,7 +20,7 @@ from csf_ke.csf_ke.doctype.mpesa_b2c_payment.encoding_credentials import (
     openssl_encrypt_encode,
 )
 
-from ..csf_ke_custom_exceptions import (
+from ..custom_exceptions import (
     IncorrectStatusError,
     InsufficientPaymentAmountError,
     InvalidReceiverMobileNumberError,

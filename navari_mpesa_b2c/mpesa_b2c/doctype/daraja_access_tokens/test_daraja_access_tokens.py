@@ -1,5 +1,5 @@
-# # Copyright (c) 2023, Navari Limited and Contributors
-# # See license.txt
+# Copyright (c) 2023, Navari Limited and Contributors
+# See license.txt
 
 import datetime
 import json
@@ -10,7 +10,7 @@ import requests
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils.password import get_decrypted_password
 
-from ..csf_ke_custom_exceptions import InvalidTokenExpiryTimeError
+from ..custom_exceptions import InvalidTokenExpiryTimeError
 from ..mpesa_b2c_payment import mpesa_b2c_payment
 from ..mpesa_b2c_payment.mpesa_b2c_payment import (
     get_access_tokens,
@@ -115,7 +115,7 @@ class TestDarajaAccessTokens(FrappeTestCase):
         self.assertEqual(hashed_token, token)
 
     @patch.object(mpesa_b2c_payment.requests, "get")
-    def test_get_access_tokens(self, mock_response) -> None:
+    def test_get_access_tokens(self, mock_response: MagicMock) -> None:
         """Tests the get_access_tokens() function from the b2c_payment module"""
         mock_response.return_value.status_code = 200
         mock_response.return_value.text = {
@@ -158,7 +158,7 @@ class TestDarajaAccessTokens(FrappeTestCase):
 
         with self.assertRaises(requests.exceptions.ConnectionError):
             response = get_access_tokens(
-                "123456789", "secret", "https://257.257.257.257/welcome"
+                "123456789", "secret", "https://256.256.256.256/welcome"
             )
 
         self.assertIsNone(response)

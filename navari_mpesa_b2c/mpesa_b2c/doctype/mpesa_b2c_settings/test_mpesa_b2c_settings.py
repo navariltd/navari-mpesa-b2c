@@ -9,7 +9,7 @@ from ..mpesa_b2c_payment.mpesa_b2c_payment import (
     get_certificate_file,
     generate_payload,
 )
-from ..csf_ke_custom_exceptions import (
+from ..custom_exceptions import (
     InvalidAuthenticationCertificateFileError,
     InvalidURLError,
 )

@@ -7,7 +7,7 @@ import pymysql
 import datetime
 from frappe.tests.utils import FrappeTestCase
 
-from ..csf_ke_custom_exceptions import (
+from ..custom_exceptions import (
     IncorrectStatusError,
     InsufficientPaymentAmountError,
     InvalidReceiverMobileNumberError,
