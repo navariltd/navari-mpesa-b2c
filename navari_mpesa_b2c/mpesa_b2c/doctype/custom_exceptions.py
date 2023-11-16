@@ -1,4 +1,4 @@
-"""Custom Exceptions and Errors raised by modules in the CSF_KE application"""
+"""Custom Exceptions and Errors raised by modules in the MPesa B2C application"""
 
 
 class InvalidReceiverMobileNumberError(Exception):
