@@ -74,8 +74,58 @@ frappe.ui.form.on("MPesa B2C Payment", {
       // Set uuidv4 compliant string
       frm.set_value("originatorconversationid", generateUUIDv4());
     }
+
+    frm.set_query("party_type", function () {
+      return {
+        filters: [["DocType", "name", "in", ["Employee", "Supplier"]]],
+      };
+    });
+  },
+  party: async function (frm) {
+    frm.set_value("party_name", "");
+    frm.set_value("partyb", "");
+
+    await fetchAndSetContactDetails(frm);
+  },
+  party_type: function (frm) {
+    frm.set_value("party", "");
+
+    if (frm.doc.party_type === "Supplier") {
+      frm.set_value("commandid", "BusinessPayment");
+    } else if (frm.doc.party_type === "Employee") {
+      frm.set_value("commandid", "SalaryPayment");
+    } else {
+      frm.set_value("commandid", "");
+    }
   },
 });
+
+async function fetchAndSetContactDetails(frm) {
+  if (frm.doc.party_type === "Supplier") {
+    const contactDetails = await frappe.db.get_value(
+      "Contact",
+      { name: frm.doc.party },
+      ["mobile_no", "full_name"]
+    );
+
+    frm.set_value("party_name", contactDetails.message?.full_name);
+    frm.set_value(
+      "partyb",
+      sanitisePhoneNumber(contactDetails.message?.mobile_no)
+    );
+  } else if (frm.doc.party_type === "Employee") {
+    const contactDetails = await frappe.db.get_value(
+      "Employee",
+      { name: frm.doc.party },
+      ["cell_number", "employee_name"]
+    );
+    frm.set_value("party_name", contactDetails.message?.employee_name);
+    frm.set_value(
+      "partyb",
+      sanitisePhoneNumber(contactDetails.message?.cell_number)
+    );
+  }
+}
 
 function generateUUIDv4() {
   // Generates a uuid4 string conforming to RFC standards
@@ -90,13 +140,25 @@ function generateUUIDv4() {
   return uuid;
 }
 
-function validatePhoneNumber(input) {
+function validatePhoneNumber(phoneNumber) {
   // Validates the receiver phone numbers
-  if (input.startsWith("2547")) {
+  if (phoneNumber.startsWith("2547")) {
     const pattern = /^2547\d{8}$/;
-    return pattern.test(input);
+    return pattern.test(phoneNumber);
   } else {
     const pattern = /^(25410|25411)\d{7}$/;
-    return pattern.test(input);
+    return pattern.test(phoneNumber);
   }
+}
+
+function sanitisePhoneNumber(phoneNumber) {
+  phoneNumber = phoneNumber.replace("+", "").replace(/\s/g, "");
+
+  const regex = /^0\d{9}$/;
+  if (!regex.test(phoneNumber)) {
+    return phoneNumber;
+  }
+
+  phoneNumber = "254" + phoneNumber.substring(1);
+  return phoneNumber;
 }

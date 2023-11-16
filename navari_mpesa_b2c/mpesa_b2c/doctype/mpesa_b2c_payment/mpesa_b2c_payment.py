@@ -24,6 +24,7 @@ from ..custom_exceptions import (
     IncorrectStatusError,
     InsufficientPaymentAmountError,
     InvalidReceiverMobileNumberError,
+    InformationMismatchError,
 )
 
 
@@ -38,14 +39,17 @@ class MPesaB2CPayment(Document):
             # Generate random UUID4
             self.originatorconversationid = str(uuid4())
 
-        if self.partyb and not validate_receiver_mobile_number(self.partyb):
+        if self.partyb:
             # Validate mobile number of receiver, i.e. PartyB
-            self.error = (
-                "The Receiver (mobile number) entered is incorrect for payment: %s."
-            )
+            receiver_number = sanitise_phone_number(self.partyb)
 
-            api_logger.error(self.error, self.name)
-            raise InvalidReceiverMobileNumberError(self.error, self.name)
+            if not validate_receiver_mobile_number(receiver_number):
+                self.error = (
+                    "The Receiver (mobile number) entered is incorrect for payment: %s."
+                )
+
+                api_logger.error(self.error, self.name)
+                raise InvalidReceiverMobileNumberError(self.error, self.name)
 
         if self.amount < 10:
             # Validates payment amount
@@ -63,6 +67,20 @@ class MPesaB2CPayment(Document):
 
                 api_logger.error(self.error, self.name)
                 raise IncorrectStatusError(self.error, self.name)
+
+        if self.party_type == "Employee":
+            if self.commandid != "SalaryPayment":
+                self.error = "Party Type 'Employee' requires Command ID 'SalaryPayment'"
+                api_logger.error(self.error)
+                raise InformationMismatchError(self.error)
+
+        if self.party_type == "Supplier":
+            if self.commandid != "BusinessPayment":
+                self.error = (
+                    "Party Type 'Supplier' requires Command ID 'BusinessPayment'"
+                )
+                api_logger.error(self.error)
+                raise InformationMismatchError(self.error)
 
 
 @frappe.whitelist(methods="POST")
@@ -555,3 +573,15 @@ def validate_receiver_mobile_number(receiver: str) -> bool:
         return bool(pattern1.match(receiver))
 
     return bool(pattern2.match(receiver))
+
+
+def sanitise_phone_number(phone_number: str) -> str:
+    """Sanitises a given phone_number string"""
+    phone_number = phone_number.replace("+", "").replace(" ", "")
+
+    regex = re.compile(r"^0\d{9}$")
+    if not regex.match(phone_number):
+        return phone_number
+
+    phone_number = "254" + phone_number[1:]
+    return phone_number
