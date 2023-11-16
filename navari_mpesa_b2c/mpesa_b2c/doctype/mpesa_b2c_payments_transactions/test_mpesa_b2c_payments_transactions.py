@@ -31,6 +31,9 @@ def create_b2c_payment_transaction() -> None:
             "partyb": "254712345678",
             "amount": 10,
             "occassion": "Testing",
+            "party_type": "Employee",
+            "account_paid_from": "Cash - NVR",
+            "account_paid_to": "Debtors - NVR",
         }
     ).insert()
 
@@ -44,6 +47,9 @@ def create_b2c_payment_transaction() -> None:
             "partyb": "254712345678",
             "amount": 10,
             "occassion": "Testing",
+            "party_type": "Employee",
+            "account_paid_from": "Cash - NVR",
+            "account_paid_to": "Debtors - NVR",
         }
     ).insert()
 

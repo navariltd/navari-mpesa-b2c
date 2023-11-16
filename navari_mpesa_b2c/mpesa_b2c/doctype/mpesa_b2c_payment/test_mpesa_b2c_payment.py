@@ -11,6 +11,7 @@ from ..custom_exceptions import (
     IncorrectStatusError,
     InsufficientPaymentAmountError,
     InvalidReceiverMobileNumberError,
+    InformationMismatchError,
 )
 from ..mpesa_b2c_payment.mpesa_b2c_payment import extract_transaction_values
 
@@ -63,12 +64,15 @@ def create_mpesa_b2c_payment() -> None:
     frappe.get_doc(
         {
             "doctype": "MPesa B2C Payment",
-            "commandid": "SalaryPayment",
+            "commandid": "BusinessPayment",
             "remarks": "test remarks",
             "status": "Not Initiated",
             "partyb": "254708993268",
             "amount": 10,
             "occassion": "Testing",
+            "party_type": "Supplier",
+            "account_paid_from": "Cash - NVR",
+            "account_paid_to": "Debtors - NVR",
         }
     ).insert()
 
@@ -90,48 +94,60 @@ class TestMPesaB2CPayment(FrappeTestCase):
             frappe.get_doc(
                 {
                     "doctype": "MPesa B2C Payment",
-                    "commandid": "SalaryPayment",
+                    "commandid": "BusinessPayment",
                     "remarks": "test remarks",
                     "status": "Not Initiated",
                     "partyb": "2547089932680",
                     "amount": 10,
                     "occassion": "Testing",
+                    "party_type": "Supplier",
+                    "account_paid_from": "Cash - NVR",
+                    "account_paid_to": "Debtors - NVR",
                 }
             ).insert()
 
             frappe.get_doc(
                 {
                     "doctype": "MPesa B2C Payment",
-                    "commandid": "SalaryPayment",
+                    "commandid": "BusinessPayment",
                     "remarks": "test remarks",
                     "status": "Not Initiated",
                     "partyb": "25470899326",
                     "amount": 10,
                     "occassion": "Testing",
+                    "party_type": "Supplier",
+                    "account_paid_from": "Cash - NVR",
+                    "account_paid_to": "Debtors - NVR",
                 }
             ).insert()
 
             frappe.get_doc(
                 {
                     "doctype": "MPesa B2C Payment",
-                    "commandid": "SalaryPayment",
+                    "commandid": "BusinessPayment",
                     "remarks": "test remarks",
                     "status": "Not Initiated",
                     "partyb": 254103456789,
                     "amount": 10,
                     "occassion": "Testing",
+                    "party_type": "Supplier",
+                    "account_paid_from": "Cash - NVR",
+                    "account_paid_to": "Debtors - NVR",
                 }
             ).insert()
 
             frappe.get_doc(
                 {
                     "doctype": "MPesa B2C Payment",
-                    "commandid": "SalaryPayment",
+                    "commandid": "BusinessPayment",
                     "remarks": "test remarks",
                     "status": "Not Initiated",
                     "partyb": 254113456789,
                     "amount": 10,
                     "occassion": "Testing",
+                    "party_type": "Supplier",
+                    "account_paid_from": "Cash - NVR",
+                    "account_paid_to": "Debtors - NVR",
                 }
             ).insert()
 
@@ -166,28 +182,34 @@ class TestMPesaB2CPayment(FrappeTestCase):
             frappe.get_doc(
                 {
                     "doctype": "MPesa B2C Payment",
-                    "commandid": "SalaryPayment",
+                    "commandid": "BusinessPayment",
                     "remarks": "test remarks",
                     "status": "Not Initiated",
                     "partyb": "254708993268",
-                    "amount": 9.9999999,
+                    "amount": 9.99,
                     "occassion": "Testing",
+                    "party_type": "Supplier",
+                    "account_paid_from": "Cash - NVR",
+                    "account_paid_to": "Debtors - NVR",
                 }
             ).insert()
 
-    def test_incredibly_large_amount(self) -> None:
+    def test_arbitrarily_large_amount(self) -> None:
         """Tests when an incredibly large number has been supplied"""
         large_number = 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
         with self.assertRaises(pymysql.err.DataError):
             frappe.get_doc(
                 {
                     "doctype": "MPesa B2C Payment",
-                    "commandid": "SalaryPayment",
+                    "commandid": "BusinessPayment",
                     "remarks": "test remarks",
                     "status": "Not Initiated",
                     "partyb": "254708993268",
                     "amount": large_number,
                     "occassion": "Testing",
+                    "party_type": "Supplier",
+                    "account_paid_from": "Cash - NVR",
+                    "account_paid_to": "Debtors - NVR",
                 }
             ).insert()
 
@@ -196,12 +218,15 @@ class TestMPesaB2CPayment(FrappeTestCase):
         new_mpesa_b2c_payment = frappe.get_doc(
             {
                 "doctype": "MPesa B2C Payment",
-                "commandid": "SalaryPayment",
+                "commandid": "BusinessPayment",
                 "remarks": "test remarks",
                 "status": "Not Initiated",
                 "partyb": "254708993268",
                 "amount": 10,
                 "occassion": "Testing",
+                "party_type": "Supplier",
+                "account_paid_from": "Cash - NVR",
+                "account_paid_to": "Debtors - NVR",
             }
         ).insert()
 
@@ -213,12 +238,15 @@ class TestMPesaB2CPayment(FrappeTestCase):
             frappe.get_doc(
                 {
                     "doctype": "MPesa B2C Payment",
-                    "commandid": "SalaryPayment",
+                    "commandid": "BusinessPayment",
                     "remarks": "test remarks",
                     "status": "Errored",
                     "partyb": "254708993268",
                     "amount": 10,
                     "occassion": "Testing",
+                    "party_type": "Supplier",
+                    "account_paid_from": "Cash - NVR",
+                    "account_paid_to": "Debtors - NVR",
                 }
             ).insert()
 
@@ -230,15 +258,48 @@ class TestMPesaB2CPayment(FrappeTestCase):
         new_doc = frappe.get_doc(
             {
                 "doctype": "MPesa B2C Payment",
-                "commandid": "SalaryPayment",
+                "commandid": "BusinessPayment",
                 "remarks": "test remarks",
                 "partyb": "254708993268",
                 "amount": 10,
                 "occassion": "Testing",
+                "party_type": "Supplier",
+                "account_paid_from": "Cash - NVR",
+                "account_paid_to": "Debtors - NVR",
             }
         ).insert()
 
         self.assertEqual(new_doc.status, "Not Initiated")
+
+    def test_mismatch_in_command_id_and_party_type(self) -> None:
+        """Tests for mismatch between the party type and command id fields"""
+        with self.assertRaises(InformationMismatchError):
+            frappe.get_doc(
+                {
+                    "doctype": "MPesa B2C Payment",
+                    "commandid": "SalaryPayment",
+                    "remarks": "test remarks",
+                    "partyb": "254708993268",
+                    "amount": 10,
+                    "occassion": "Testing",
+                    "party_type": "Supplier",
+                    "account_paid_from": "Cash - NVR",
+                    "account_paid_to": "Debtors - NVR",
+                }
+            ).insert()
+            frappe.get_doc(
+                {
+                    "doctype": "MPesa B2C Payment",
+                    "commandid": "BusinessPayment",
+                    "remarks": "test remarks",
+                    "partyb": "254708993268",
+                    "amount": 10,
+                    "occassion": "Testing",
+                    "party_type": "Employee",
+                    "account_paid_from": "Cash - NVR",
+                    "account_paid_to": "Debtors - NVR",
+                }
+            ).insert()
 
     def test_extract_transaction_values(self) -> None:
         """Tests extract_transaction_values() from the mpesa_b2c_payment module"""
