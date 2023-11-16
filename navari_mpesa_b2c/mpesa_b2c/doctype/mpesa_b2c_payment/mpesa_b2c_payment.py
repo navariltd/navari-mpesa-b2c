@@ -15,10 +15,8 @@ from frappe.model.document import Document
 from frappe.utils.file_manager import get_file_path
 from frappe.utils.password import get_decrypted_password
 
-from csf_ke.csf_ke.doctype import api_logger
-from csf_ke.csf_ke.doctype.mpesa_b2c_payment.encoding_credentials import (
-    openssl_encrypt_encode,
-)
+from .. import api_logger
+from .encoding_credentials import openssl_encrypt_encode
 
 from ..custom_exceptions import (
     IncorrectStatusError,
