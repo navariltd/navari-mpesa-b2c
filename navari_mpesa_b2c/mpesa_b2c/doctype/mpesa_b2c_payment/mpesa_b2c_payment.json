@@ -23,12 +23,14 @@
     "transaction_details_section",
     "commandid",
     "remarks",
-    "status",
-    "error_description",
     "column_break_jg71",
     "amount",
     "occassion",
-    "error_code"
+    "payment_status_and_errors_section",
+    "status",
+    "error_code",
+    "column_break_oy1c",
+    "error_description"
   ],
   "fields": [
     {
@@ -173,11 +175,21 @@
       "label": "Account Paid To",
       "options": "Account",
       "reqd": 1
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "payment_status_and_errors_section",
+      "fieldtype": "Section Break",
+      "label": "Payment Status and Errors"
+    },
+    {
+      "fieldname": "column_break_oy1c",
+      "fieldtype": "Column Break"
     }
   ],
   "index_web_pages_for_search": 1,
   "links": [],
-  "modified": "2023-11-16 14:39:56.230371",
+  "modified": "2023-11-20 15:45:00.620824",
   "modified_by": "Administrator",
   "module": "MPesa B2C",
   "name": "MPesa B2C Payment",

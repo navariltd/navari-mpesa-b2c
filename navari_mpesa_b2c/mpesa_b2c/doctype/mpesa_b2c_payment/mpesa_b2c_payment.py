@@ -321,14 +321,18 @@ def handle_successful_result_response(
     mpesa_b2c_payment_document = frappe.db.get_value(
         "MPesa B2C Payment",
         {"originatorconversationid": originator_conversation_id},
-        ["name"],
+        ["name", "account_paid_from", "account_paid_to"],
         as_dict=True,
     )
 
     result_parameters = results.get("ResultParameters").get("ResultParameter")
     transaction_values = extract_transaction_values(result_parameters, transaction_id)
     transaction_values.update(
-        {"mpesa_b2c_payment_name": mpesa_b2c_payment_document.name}
+        {
+            "b2c_payment_name": mpesa_b2c_payment_document.name,
+            "account_paid_from": mpesa_b2c_payment_document.account_paid_from,
+            "account_paid_to": mpesa_b2c_payment_document.account_paid_to,
+        }
     )
 
     update_doctype_single_values(
@@ -543,7 +547,8 @@ def save_transaction_to_database(
     update_values: dict[str, str | int | float],
 ) -> Document:
     """
-    Saves Transaction details to database after successful B2C Payment and returns the record
+    Saves the transaction details to database as an MPesa B2C Payments Transactions record
+    after successful B2C Payment and returns the record
     """
     update_values.update({"doctype": doctype})
 
@@ -553,7 +558,7 @@ def save_transaction_to_database(
     api_logger.info(
         "Transaction ID: %s, originator conversation id: %s, amount: %s, transaction time: %s saved.",
         update_values["transaction_id"],
-        update_values["mpesa_b2c_payment_name"],
+        update_values["b2c_payment_name"],
         update_values["transaction_amount"],
         update_values["transaction_completed_datetime"],
     )

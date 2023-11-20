@@ -37,7 +37,7 @@ frappe.ui.form.on("MPesa B2C Payment", {
       frm.add_custom_button("Initiate Payment", async function () {
         frappe.call({
           method:
-            "csf_ke.csf_ke.doctype.mpesa_b2c_payment.mpesa_b2c_payment.initiate_payment",
+            "navari_mpesa_b2c.mpesa_b2c.doctype.mpesa_b2c_payment.mpesa_b2c_payment.initiate_payment",
           args: {
             // Create request with a partial payload
             partial_payload: {

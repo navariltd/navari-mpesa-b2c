@@ -21,6 +21,16 @@ def create_b2c_payment_transaction() -> None:
 
     frappe.set_user("Administrator")
 
+    available_cash_accounts = frappe.db.sql(
+        """
+        SELECT name
+        FROM `tabAccount`
+        WHERE account_type = 'Cash'
+            and account_currency = 'KES'
+        """,
+        as_dict=True,
+    )
+
     doc = frappe.get_doc(
         {
             "doctype": "MPesa B2C Payment",
@@ -32,8 +42,8 @@ def create_b2c_payment_transaction() -> None:
             "amount": 10,
             "occassion": "Testing",
             "party_type": "Employee",
-            "account_paid_from": "Cash - NVR",
-            "account_paid_to": "Debtors - NVR",
+            "account_paid_from": available_cash_accounts[0].name,
+            "account_paid_to": available_cash_accounts[0].name,
         }
     ).insert()
 
@@ -48,8 +58,8 @@ def create_b2c_payment_transaction() -> None:
             "amount": 10,
             "occassion": "Testing",
             "party_type": "Employee",
-            "account_paid_from": "Cash - NVR",
-            "account_paid_to": "Debtors - NVR",
+            "account_paid_from": available_cash_accounts[0].name,
+            "account_paid_to": available_cash_accounts[0].name,
         }
     ).insert()
 
@@ -65,6 +75,8 @@ def create_b2c_payment_transaction() -> None:
             "working_acct_avlbl_funds": 1000000,
             "utility_acct_avlbl_funds": 10000000,
             "transaction_completed_datetime": datetime.datetime.now(),
+            "account_paid_from": available_cash_accounts[0].name,
+            "account_paid_to": available_cash_accounts[0].name,
         }
     ).insert()
 
@@ -145,3 +157,17 @@ class TestMPesaB2CPaymentsTransactions(FrappeTestCase):
                     "transaction_completed_datetime": datetime.datetime.now(),
                 }
             ).insert()
+
+    def test_journal_entry_created_after_successful_payments_transaction(self) -> None:
+        """Tests journal entries are created after successful payments"""
+        journal_entries = frappe.db.sql(
+            """
+            SELECT name
+            FROM `tabJournal Entry`
+            ORDER BY creation DESC
+            """,
+            as_dict=True,
+        )
+        self.assertGreaterEqual(len(journal_entries), 1)
+        self.assertIsInstance(journal_entries, list)
+        self.assertIsInstance(journal_entries[0], dict)

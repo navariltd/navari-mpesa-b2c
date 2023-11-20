@@ -13,11 +13,13 @@
     "receiver_public_name",
     "charges_paid_acct_avlbl_funds",
     "utility_acct_avlbl_funds",
+    "account_paid_from",
     "column_break_iset",
     "transaction_amount",
     "recipient_is_registered_customer",
     "working_acct_avlbl_funds",
-    "transaction_completed_datetime"
+    "transaction_completed_datetime",
+    "account_paid_to"
   ],
   "fields": [
     {
@@ -97,11 +99,27 @@
       "label": "Transaction Completed Date Time",
       "read_only": 1,
       "reqd": 1
+    },
+    {
+      "fieldname": "account_paid_from",
+      "fieldtype": "Link",
+      "label": "Account Paid From",
+      "options": "Account",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "account_paid_to",
+      "fieldtype": "Link",
+      "label": "Account Paid To",
+      "options": "Account",
+      "read_only": 1,
+      "reqd": 1
     }
   ],
   "index_web_pages_for_search": 1,
   "links": [],
-  "modified": "2023-11-15 10:43:20.399768",
+  "modified": "2023-11-20 09:21:10.370717",
   "modified_by": "Administrator",
   "module": "MPesa B2C",
   "name": "MPesa B2C Payments Transactions",

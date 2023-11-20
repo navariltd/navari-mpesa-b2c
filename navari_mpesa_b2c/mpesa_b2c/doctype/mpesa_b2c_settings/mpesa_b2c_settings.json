@@ -40,7 +40,7 @@
       "label": "Initiator Name"
     },
     {
-      "description": "Mandatory Format: (http|https)://domain/api/method/csf_ke.csf_ke.doctype.b2c_payment.b2c_payment.results_callback_url",
+      "description": "Mandatory Format: (http|https)://domain/api/method/navari_mpesa_b2c.mpesa_b2c.doctype.mpesa_b2c_payment.mpesa_b2c_payment.results_callback_url",
       "fieldname": "results_url",
       "fieldtype": "Data",
       "label": "Results URL"
@@ -76,7 +76,7 @@
       "reqd": 1
     },
     {
-      "description": "Mandatory Format: (http|https)://domain/api/method/csf_ke.csf_ke.doctype.b2c_payment.b2c_payment.queue_timeout_url",
+      "description": "Mandatory Format: (http|https)://domain/api/method/navari_mpesa_b2c.mpesa_b2c.doctype.mpesa_b2c_payment.mpesa_b2c_payment.queue_timeout_url",
       "fieldname": "queue_timeout_url",
       "fieldtype": "Data",
       "label": "Queue TimeOut URL"
@@ -103,7 +103,7 @@
   "index_web_pages_for_search": 1,
   "issingle": 1,
   "links": [],
-  "modified": "2023-11-15 10:42:57.886201",
+  "modified": "2023-11-20 11:20:46.305684",
   "modified_by": "Administrator",
   "module": "MPesa B2C",
   "name": "MPesa B2C Settings",
