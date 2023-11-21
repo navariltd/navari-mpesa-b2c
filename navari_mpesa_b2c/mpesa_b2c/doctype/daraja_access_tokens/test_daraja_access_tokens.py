@@ -181,9 +181,9 @@ class TestDarajaAccessTokens(FrappeTestCase):
             LIMIT 1
             """,
             as_dict=True,
-        )
+        )[0]
         token = get_decrypted_password(
-            "Daraja Access Tokens", hashed_token[0].name, "access_token"
+            "Daraja Access Tokens", hashed_token.name, "access_token"
         )
 
         self.assertEqual(saved_token, "987abc321xyz")
