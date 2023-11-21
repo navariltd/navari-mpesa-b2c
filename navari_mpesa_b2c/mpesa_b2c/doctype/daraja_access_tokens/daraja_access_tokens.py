@@ -4,7 +4,7 @@
 from frappe.model.document import Document
 
 from ..custom_exceptions import InvalidTokenExpiryTimeError
-from .. import api_logger
+from .. import app_logger
 
 
 class DarajaAccessTokens(Document):
@@ -13,9 +13,8 @@ class DarajaAccessTokens(Document):
     def validate(self) -> None:
         """Run validations before saving document"""
         if self.expiry_time and self.expiry_time <= self.token_fetch_time:
-            api_logger.error(
+            self.error = (
                 "Access Token Expiry time cannot be same or early than the fetch time"
             )
-            raise InvalidTokenExpiryTimeError(
-                "Access Token Expiry time cannot be same or early than the fetch time"
-            )
+            app_logger.error(self.error)
+            raise InvalidTokenExpiryTimeError(self.error)

@@ -8,14 +8,18 @@
   "engine": "InnoDB",
   "field_order": [
     "title",
-    "consumer_key",
+    "column_break_efxv",
+    "organisation_shortcode",
+    "api_keys_and_secrets_section",
     "initiator_name",
+    "consumer_key",
+    "column_break_bccd",
+    "initiator_password",
+    "consumer_secret",
+    "request_handlers_and_callback_urls_section",
     "results_url",
     "authorization_url",
     "column_break_it7j",
-    "organisation_shortcode",
-    "consumer_secret",
-    "initiator_password",
     "queue_timeout_url",
     "payment_url",
     "section_break_tos4",
@@ -40,7 +44,7 @@
       "label": "Initiator Name"
     },
     {
-      "description": "Mandatory Format: (http|https)://domain/api/method/navari_mpesa_b2c.mpesa_b2c.doctype.mpesa_b2c_payment.mpesa_b2c_payment.results_callback_url",
+      "description": "domain/navari_mpesa_b2c.mpesa_b2c.doctype.mpesa_b2c_payment.mpesa_b2c_payment.results_callback_url",
       "fieldname": "results_url",
       "fieldtype": "Data",
       "label": "Results URL"
@@ -76,7 +80,7 @@
       "reqd": 1
     },
     {
-      "description": "Mandatory Format: (http|https)://domain/api/method/navari_mpesa_b2c.mpesa_b2c.doctype.mpesa_b2c_payment.mpesa_b2c_payment.queue_timeout_url",
+      "description": "domain/navari_mpesa_b2c.mpesa_b2c.doctype.mpesa_b2c_payment.mpesa_b2c_payment.queue_timeout_url",
       "fieldname": "queue_timeout_url",
       "fieldtype": "Data",
       "label": "Queue TimeOut URL"
@@ -90,7 +94,8 @@
     },
     {
       "fieldname": "section_break_tos4",
-      "fieldtype": "Section Break"
+      "fieldtype": "Section Break",
+      "label": "Authorisation Certificate"
     },
     {
       "description": "A Certificate file (.cer or .pem) received from Safaricom.",
@@ -98,12 +103,30 @@
       "fieldtype": "Attach",
       "label": "Authorisation Certificate File",
       "reqd": 1
+    },
+    {
+      "fieldname": "column_break_efxv",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "api_keys_and_secrets_section",
+      "fieldtype": "Section Break",
+      "label": "API Keys and Secrets"
+    },
+    {
+      "fieldname": "column_break_bccd",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "request_handlers_and_callback_urls_section",
+      "fieldtype": "Section Break",
+      "label": "Request Handlers and Callback URLs"
     }
   ],
   "index_web_pages_for_search": 1,
   "issingle": 1,
   "links": [],
-  "modified": "2023-11-20 11:20:46.305684",
+  "modified": "2023-11-21 11:32:30.869331",
   "modified_by": "Administrator",
   "module": "MPesa B2C",
   "name": "MPesa B2C Settings",
@@ -122,5 +145,6 @@
   ],
   "sort_field": "modified",
   "sort_order": "DESC",
-  "states": []
+  "states": [],
+  "track_changes": 1
 }

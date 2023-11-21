@@ -159,7 +159,7 @@ class TestMPesaB2CSettings(FrappeTestCase):
         self.assertEqual(authorization_url, "https://example.com/api/method/handler")
         self.assertEqual(consumer_secret, "secret")
 
-    def test_get_certificate_file_function(self) -> None:
+    def test_get_certificate_file_function_valid(self) -> None:
         """Tests the get_certificate_file() function from the b2c payment module"""
         certificate_file_path = "/files/AuthorizationCertificate.cer"
         frappe.get_doc(
@@ -181,6 +181,15 @@ class TestMPesaB2CSettings(FrappeTestCase):
         certificate = get_certificate_file(certificate_file_path)
 
         self.assertTrue(certificate, certificate.endswith(certificate_file_path))
+
+    def test_get_certificate_file_function_invalid(self) -> None:
+        """Tests cases the get_certificate_file() function fails from the b2c payment module"""
+        certificate = None
+
+        with self.assertRaises(frappe.exceptions.ValidationError):
+            certificate = get_certificate_file("files/abc")
+
+        self.assertIsNone(certificate)
 
     def test_generate_payload(self) -> None:
         """Tests generate_payload() function in mpesa_b2c_payment module"""

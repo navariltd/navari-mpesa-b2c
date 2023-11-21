@@ -5,7 +5,7 @@ import datetime
 import frappe
 from frappe.model.document import Document
 
-from .. import api_logger
+from .. import app_logger
 from ..custom_exceptions import (
     InformationMismatchError,
     UnExistentB2CPaymentRecordError,
@@ -35,7 +35,7 @@ class MPesaB2CPaymentsTransactions(Document):
             )
 
             if not self.fetched_b2c_payment:
-                api_logger.error(
+                app_logger.error(
                     "The B2C payment record: %s does not exist",
                     self.b2c_payment_name,
                 )
@@ -49,7 +49,7 @@ class MPesaB2CPaymentsTransactions(Document):
                 or self.fetched_b2c_payment.status == "Timed-Out"
                 or self.fetched_b2c_payment.status == "Pending"
             ):
-                api_logger.error(
+                app_logger.error(
                     "Incorrect B2C Payment Status: %s for B2C Payment: %s",
                     self.fetched_b2c_payment.status,
                     self.b2c_payment_name,
@@ -59,7 +59,7 @@ class MPesaB2CPaymentsTransactions(Document):
                 )
 
             if self.transaction_amount != self.fetched_b2c_payment.amount:
-                api_logger.error(
+                app_logger.error(
                     "Incorrect Transaction and B2C Payment Amount for B2C payment: %s",
                     self.b2c_payment_name,
                 )
@@ -91,7 +91,7 @@ class MPesaB2CPaymentsTransactions(Document):
             )
 
             journal_entry.insert(ignore_permissions=True)
-            api_logger.info(
+            app_logger.info(
                 "Journal Entry %s created successfully from B2C Payment: %s and B2C Payments Transaction: %s",
                 journal_entry.name,
                 self.fetched_b2c_payment.name,

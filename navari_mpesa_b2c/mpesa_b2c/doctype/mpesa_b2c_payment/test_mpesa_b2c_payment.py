@@ -2,18 +2,30 @@
 # See license.txt
 
 
+import datetime
+import random
+import string
+from unittest.mock import MagicMock, patch
+
 import frappe
 import pymysql
-import datetime
+import requests
+from frappe.model.document import Document
 from frappe.tests.utils import FrappeTestCase
 
 from ..custom_exceptions import (
     IncorrectStatusError,
+    InformationMismatchError,
     InsufficientPaymentAmountError,
     InvalidReceiverMobileNumberError,
-    InformationMismatchError,
 )
-from ..mpesa_b2c_payment.mpesa_b2c_payment import extract_transaction_values
+from ..mpesa_b2c_payment import mpesa_b2c_payment
+from ..mpesa_b2c_payment.mpesa_b2c_payment import (
+    extract_transaction_values,
+    get_result_details,
+    handle_successful_result_response,
+    send_payload,
+)
 
 SUCCESSFUL_TEST_RESULTS = {
     "Result": {
@@ -25,7 +37,7 @@ SUCCESSFUL_TEST_RESULTS = {
         "TransactionID": "NOD47HAY4AB",
         "ResultParameters": {
             "ResultParameter": [
-                {"Key": "TransactionAmount", "Value": 11},
+                {"Key": "TransactionAmount", "Value": 10},
                 {"Key": "TransactionReceipt", "Value": "NOD47HAY4AB"},
                 {"Key": "B2CRecipientIsRegisteredCustomer", "Value": "Y"},
                 {
@@ -72,7 +84,7 @@ def create_mpesa_b2c_payment() -> None:
             "occassion": "Testing",
             "party_type": "Supplier",
             "account_paid_from": "Cash - NVR",
-            "account_paid_to": "Debtors - NVR",
+            "account_paid_to": "Cash - NVR",
         }
     ).insert()
 
@@ -332,3 +344,81 @@ class TestMPesaB2CPayment(FrappeTestCase):
                 "Value"
             ],
         )
+
+    def test_get_result_details_function(self) -> None:
+        """Tests the get_result_details() function from the mpesa_b2c_payment module"""
+        output = get_result_details(SUCCESSFUL_TEST_RESULTS["Result"])
+
+        self.assertIsInstance(output, tuple)
+        self.assertEqual(len(output), 5)
+        self.assertEqual(
+            output[0], SUCCESSFUL_TEST_RESULTS["Result"]["OriginatorConversationID"]
+        )
+        self.assertEqual(output[4], SUCCESSFUL_TEST_RESULTS["Result"]["TransactionID"])
+
+    @patch.object(mpesa_b2c_payment.requests, "post")
+    def test_send_payload(self, mock_response: MagicMock) -> None:
+        """Tests the send_payload() function from the b2c_payment module"""
+        mock_response.return_value.status_code = 200
+        mock_response.return_value.text = {"message": "Success"}
+
+        response, status_code = send_payload(
+            "123456789", "secret", "https://example.com/payment"
+        )
+        self.assertIsInstance(response, dict)
+        self.assertEqual(response["message"], "Success")
+        self.assertEqual(status_code, 200)
+
+    @patch.object(mpesa_b2c_payment.requests, "post", side_effect=requests.HTTPError)
+    def test_send_payload_error_response(self, mock_response: MagicMock) -> None:
+        """Tests instances the send_payload() from the b2c_payment module receives an error response"""
+        response, status_code = None, None
+
+        with self.assertRaises(requests.HTTPError):
+            response, status_code = send_payload(
+                "123456789", "secret", "https://example.com/payment"
+            )
+
+        self.assertIsNone(response)
+        self.assertIsNone(status_code)
+
+    @patch.object(
+        mpesa_b2c_payment.requests,
+        "post",
+        side_effect=requests.exceptions.ConnectionError,
+    )
+    def test_send_payload_error_connection_failure(
+        self, mock_response: MagicMock
+    ) -> None:
+        """Tests instances the send_payload() from the b2c_payment fails due to a lack of connection"""
+        response = None
+
+        with self.assertRaises(requests.exceptions.ConnectionError):
+            response = send_payload(
+                "123456789", "secret", "https://example.com/payment"
+            )
+
+        self.assertIsNone(response)
+
+    def test_handle_successful_result_response(self) -> None:
+        """Tests the handle_successful_result_response() function from the mpesa b2c module"""
+        payment = frappe.db.get_value(
+            "MPesa B2C Payment",
+            {"partyb": "254708993268"},
+            ["originatorconversationid"],
+            as_dict=True,
+        )
+        SUCCESSFUL_TEST_RESULTS["Result"][
+            "OriginatorConversationID"
+        ] = payment.originatorconversationid
+
+        mock_transaction_id = f"{''.join([random.choice(string.ascii_letters) for _ in range(10)])}{random.randint(1000000, 100000000)}"
+        SUCCESSFUL_TEST_RESULTS["Result"]["TransactionID"] = mock_transaction_id
+        SUCCESSFUL_TEST_RESULTS["Result"]["ResultParameters"]["ResultParameter"][1][
+            "Value"
+        ] = mock_transaction_id
+
+        result = handle_successful_result_response(SUCCESSFUL_TEST_RESULTS["Result"])
+
+        self.assertIsInstance(result, Document)
+        self.assertEqual(result.name, mock_transaction_id)

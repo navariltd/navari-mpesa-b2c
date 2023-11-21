@@ -7,7 +7,7 @@ from frappe.model.document import Document
 
 from ..custom_exceptions import InvalidURLError
 
-from .. import api_logger
+from .. import app_logger
 from ..custom_exceptions import (
     InvalidAuthenticationCertificateFileError,
 )
@@ -18,6 +18,8 @@ class MPesaB2CSettings(Document):
 
     def validate(self) -> None:
         """Validate upon creating a record of the B2C Settings"""
+        self.errors = ""
+
         if (
             self.results_url
             and self.queue_timeout_url
@@ -30,22 +32,18 @@ class MPesaB2CSettings(Document):
                 and validate_url(self.authorization_url)
                 and validate_url(self.payment_url)
             ):
-                api_logger.error(
-                    "The URLs Registered are not valid. Please review them"
-                )
-                raise InvalidURLError(
-                    "The URLs Registered are not valid. Please review them"
-                )
+                self.errors = "The URLs Registered are not valid. Please review them"
+                app_logger.error(self.errors)
+                raise InvalidURLError(self.errors)
 
         if self.certificate_file:
             if not (
                 self.certificate_file.endswith(".cer")
                 or self.certificate_file.endswith(".pem")
             ):
-                api_logger.error("Invalid Authentication Certificate file uploaded")
-                raise InvalidAuthenticationCertificateFileError(
-                    "Invalid Authentication Certificate file uploaded"
-                )
+                self.errors = "Invalid Authentication Certificate file uploaded"
+                app_logger.error(self.errors)
+                raise InvalidAuthenticationCertificateFileError(self.errors)
 
 
 def validate_url(url: str) -> bool:

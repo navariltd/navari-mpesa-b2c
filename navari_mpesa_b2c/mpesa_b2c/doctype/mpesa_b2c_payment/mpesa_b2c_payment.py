@@ -6,7 +6,7 @@ import base64
 import datetime
 import json
 import re
-from typing import Literal
+from typing import Literal, Final
 from uuid import uuid4
 
 import frappe
@@ -15,7 +15,7 @@ from frappe.model.document import Document
 from frappe.utils.file_manager import get_file_path
 from frappe.utils.password import get_decrypted_password
 
-from .. import api_logger
+from .. import app_logger
 from .encoding_credentials import openssl_encrypt_encode
 
 from ..custom_exceptions import (
@@ -24,6 +24,11 @@ from ..custom_exceptions import (
     InvalidReceiverMobileNumberError,
     InformationMismatchError,
 )
+
+MPESA_B2C_SETTINGS_DOCTYPE: Final[str] = "MPesa B2C Settings"
+MPESA_B2C_PAYMENT_DOCTYPE: Final[str] = "MPesa B2C Payment"
+DARAJA_ACCESS_TOKENS_DOCTYPE: Final[str] = "Daraja Access Tokens"
+MPESA_B2C_PAYMENTS_TRANSACTIONS: Final[str] = "MPesa B2C Payments Transactions"
 
 
 class MPesaB2CPayment(Document):
@@ -46,14 +51,14 @@ class MPesaB2CPayment(Document):
                     "The Receiver (mobile number) entered is incorrect for payment: %s."
                 )
 
-                api_logger.error(self.error, self.name)
+                app_logger.error(self.error, self.name)
                 raise InvalidReceiverMobileNumberError(self.error, self.name)
 
         if self.amount < 10:
             # Validates payment amount
             self.error = "Amount entered is less than the least acceptable amount of Kshs. 10, for payment: %s"
 
-            api_logger.error(self.error, self.name)
+            app_logger.error(self.error, self.name)
             raise InsufficientPaymentAmountError(self.error, self.name)
 
         if not self.status:
@@ -63,13 +68,13 @@ class MPesaB2CPayment(Document):
             if not (self.error_description and self.error_code):
                 self.error = "Status 'Errored' needs to have a corresponding error_code and error_description for payment: %s"
 
-                api_logger.error(self.error, self.name)
+                app_logger.error(self.error, self.name)
                 raise IncorrectStatusError(self.error, self.name)
 
         if self.party_type == "Employee":
             if self.commandid != "SalaryPayment":
                 self.error = "Party Type 'Employee' requires Command ID 'SalaryPayment'"
-                api_logger.error(self.error)
+                app_logger.error(self.error)
                 raise InformationMismatchError(self.error)
 
         if self.party_type == "Supplier":
@@ -77,7 +82,7 @@ class MPesaB2CPayment(Document):
                 self.error = (
                     "Party Type 'Supplier' requires Command ID 'BusinessPayment'"
                 )
-                api_logger.error(self.error)
+                app_logger.error(self.error)
                 raise InformationMismatchError(self.error)
 
 
@@ -91,10 +96,10 @@ def initiate_payment(partial_payload: str) -> None:
     If a valid token is found, a payment initialization request is placed immediately.
     """
     partial_payload = json.loads(frappe.form_dict.partial_payload)
-    b2c_settings = frappe.db.get_singles_dict("MPesa B2C Settings")
+    b2c_settings = frappe.db.get_singles_dict(MPESA_B2C_SETTINGS_DOCTYPE)
 
     payment_document = frappe.db.get_value(
-        "MPesa B2C Payment",
+        MPESA_B2C_PAYMENT_DOCTYPE,
         {"name": partial_payload.get("name")},
         ["name", "status"],
         as_dict=True,
@@ -115,7 +120,7 @@ def initiate_payment(partial_payload: str) -> None:
             make_payment(bearer_token, b2c_settings, partial_payload, payment_document)
     else:
         bearer_token = get_decrypted_password(
-            "Daraja Access Tokens", hashed_token, "access_token"
+            DARAJA_ACCESS_TOKENS_DOCTYPE, hashed_token, "access_token"
         )
 
         make_payment(bearer_token, b2c_settings, partial_payload, payment_document)
@@ -138,9 +143,7 @@ def results_callback_url(Result: dict) -> None:
 
     if result_type == 0:
         if result_code == 0:
-            handle_successful_result_response(
-                results, originator_conversation_id, transaction_id
-            )
+            handle_successful_result_response(results)
         else:
             handle_unsuccessful_result_response(
                 transaction_id,
@@ -187,7 +190,7 @@ def get_b2c_settings(b2c_settings: Document) -> tuple[str, str, str]:
     consumer_key = b2c_settings.get("consumer_key")
     authorization_url = b2c_settings.get("authorization_url")
     consumer_secret = get_decrypted_password(
-        "MPesa B2C Settings", "MPesa B2C Settings", "consumer_secret"
+        MPESA_B2C_SETTINGS_DOCTYPE, MPESA_B2C_SETTINGS_DOCTYPE, "consumer_secret"
     )
     return consumer_key, consumer_secret, authorization_url
 
@@ -214,15 +217,15 @@ def get_access_tokens(
         response.raise_for_status()  # Raise HTTPError if status code >= 400
 
     except requests.HTTPError:
-        api_logger.exception("Exception Encountered when fetching access token")
+        app_logger.exception("Exception Encountered when fetching access token")
         raise
 
     except requests.exceptions.ConnectionError:
-        api_logger.exception("Exception Encountered when fetching access token")
+        app_logger.exception("Exception Encountered when fetching access token")
         raise
 
     except Exception:
-        api_logger.exception("Exception Encountered")
+        app_logger.exception("Exception Encountered")
         raise
 
     return response.text, response.status_code
@@ -241,13 +244,13 @@ def save_access_token_to_database(response: str) -> str:
     )
     access_token = response.get("access_token")
 
-    new_token = frappe.new_doc("Daraja Access Tokens")
+    new_token = frappe.new_doc(DARAJA_ACCESS_TOKENS_DOCTYPE)
     new_token.access_token = access_token
     new_token.expiry_time = expiry_time
     new_token.token_fetch_time = token_fetch_time
     new_token.save()
 
-    api_logger.info(
+    app_logger.info(
         "Access token fetched and saved successfully at %s expiring at %s",
         token_fetch_time,
         expiry_time,
@@ -266,7 +269,7 @@ def get_certificate_file(certificate_path: str) -> str | Literal[-1]:
 
         return certificate
 
-    api_logger.error(
+    app_logger.error(
         "No valid Authentication Certificate file (*.cer or *.pem) found in the server."
     )
     return -1
@@ -312,21 +315,21 @@ def get_result_details(results: dict) -> tuple[str, str, str | int, str, str | i
     )
 
 
-def handle_successful_result_response(
-    results: dict, originator_conversation_id: str, transaction_id: str
-) -> None:
+def handle_successful_result_response(results: dict) -> Document:
     """
     Handles the results callback's responses with a successful ResultCode, i.e. ResultCode of 0
     """
     mpesa_b2c_payment_document = frappe.db.get_value(
-        "MPesa B2C Payment",
-        {"originatorconversationid": originator_conversation_id},
+        MPESA_B2C_PAYMENT_DOCTYPE,
+        {"originatorconversationid": results.get("OriginatorConversationID")},
         ["name", "account_paid_from", "account_paid_to"],
         as_dict=True,
     )
 
     result_parameters = results.get("ResultParameters").get("ResultParameter")
-    transaction_values = extract_transaction_values(result_parameters, transaction_id)
+    transaction_values = extract_transaction_values(
+        result_parameters, results.get("TransactionID")
+    )
     transaction_values.update(
         {
             "b2c_payment_name": mpesa_b2c_payment_document.name,
@@ -336,14 +339,15 @@ def handle_successful_result_response(
     )
 
     update_doctype_single_values(
-        "MPesa B2C Payment", mpesa_b2c_payment_document, "status", "Paid"
+        MPESA_B2C_PAYMENT_DOCTYPE, mpesa_b2c_payment_document, "status", "Paid"
     )
 
     transaction = save_transaction_to_database(
-        "MPesa B2C Payments Transactions", transaction_values
+        MPESA_B2C_PAYMENTS_TRANSACTIONS, transaction_values
     )
 
     frappe.response["transaction"] = transaction
+    return transaction
 
 
 def handle_unsuccessful_result_response(
@@ -356,26 +360,27 @@ def handle_unsuccessful_result_response(
     Handles the results callback's responses with an unsuccessful ResultCode, i.e. ResultCode != 0
     """
     mpesa_b2c_payment_document = frappe.db.get_value(
-        "MPesa B2C Payment",
+        MPESA_B2C_PAYMENT_DOCTYPE,
         {"originatorconversationid": originator_conversation_id},
+        ["name"],
         as_dict=True,
     )
 
-    api_logger.info(
-        "Transaction %s with originator conversation id %s Errored with code: %s, description: %s",
+    app_logger.info(
+        "Transaction %s from B2C Payment %s Errored with code: %s, description: %s",
         transaction_id,
-        originator_conversation_id,
+        mpesa_b2c_payment_document.name,
         result_code,
         results_description,
     )
     update_doctype_single_values(
-        "MPesa B2C Payment", mpesa_b2c_payment_document, "status", "Errored"
+        MPESA_B2C_PAYMENT_DOCTYPE, mpesa_b2c_payment_document, "status", "Errored"
     )
     update_doctype_single_values(
-        "MPesa B2C Payment", mpesa_b2c_payment_document, "error_code", result_code
+        MPESA_B2C_PAYMENT_DOCTYPE, mpesa_b2c_payment_document, "error_code", result_code
     )
     update_doctype_single_values(
-        "MPesa B2C Payment",
+        MPESA_B2C_PAYMENT_DOCTYPE,
         mpesa_b2c_payment_document,
         "error_description",
         results_description,
@@ -388,15 +393,19 @@ def handle_duplicate_request(originator_conversation_id: str) -> None:
     Normally, only one payment can be initiated from the client.
     """
     mpesa_b2c_payment = frappe.db.get_value(
-        "MPesa B2C Payment",
+        MPESA_B2C_PAYMENT_DOCTYPE,
         {"originatorconversationid": originator_conversation_id},
         ["name"],
         as_dict=True,
     )
-    api_logger.info(
-        "Duplicate Request Encountered for: %s and originator conversation id: %s",
+    frappe.msgprint(
+        "Duplicate request encountered!",
+        title="Duplicate Request Error",
+        indicator="orange",
+    )
+    app_logger.info(
+        "Duplicate Request Encountered for B2C Payment record: %s",
         mpesa_b2c_payment.name,
-        originator_conversation_id,
     )
 
 
@@ -459,15 +468,15 @@ def send_payload(payload: str, access_token: str, url: str) -> tuple[str, int]:
         response.raise_for_status()  # Raise HTTPError if status code >= 400
 
     except requests.HTTPError:
-        api_logger.exception("Exception Encountered when sending payment request")
+        app_logger.exception("Exception Encountered when sending payment request")
         raise
 
     except requests.exceptions.ConnectionError:
-        api_logger.exception("Exception Encountered when sending payment request")
+        app_logger.exception("Exception Encountered when sending payment request")
         raise
 
     except Exception:
-        api_logger.exception("Exception Encountered")
+        app_logger.exception("Exception Encountered")
         raise
 
     frappe.msgprint("Payment Request Successful", title="Successful", indicator="green")
@@ -485,7 +494,7 @@ def make_payment(
     This function sends the final response to the client after initiating the payment request.
     """
     initiator_password = get_decrypted_password(
-        "MPesa B2C Settings", "MPesa B2C Settings", "initiator_password"
+        MPESA_B2C_SETTINGS_DOCTYPE, MPESA_B2C_SETTINGS_DOCTYPE, "initiator_password"
     )
     payment_url = b2c_settings.get("payment_url")
     certificate_relative_path = b2c_settings.get("certificate_file")
@@ -502,12 +511,12 @@ def make_payment(
         response, status_code = send_payload(payload, bearer_token, payment_url)
 
         update_doctype_single_values(
-            "MPesa B2C Payment", payment_document, "status", "Pending"
+            MPESA_B2C_PAYMENT_DOCTYPE, payment_document, "status", "Pending"
         )
 
-        api_logger.info(
-            "Successful payment initiation for originator conversation id: %s with status code: %s",
-            partial_payload["OriginatorConversationID"],
+        app_logger.info(
+            "Successful payment initiation for B2C Payment record: %s with status code: %s",
+            payment_document.name,
             status_code,
         )
         frappe.response["message"] = "successful"
@@ -533,7 +542,7 @@ def update_doctype_single_values(
         doctype, document_to_update.name, field, new_value, update_modified=True
     )
 
-    api_logger.info(
+    app_logger.info(
         "%s's %s's %s updated to %s",
         doctype,
         document_to_update.name,
@@ -555,7 +564,7 @@ def save_transaction_to_database(
     transaction = frappe.get_doc(update_values)
     transaction.insert(ignore_permissions=True)
 
-    api_logger.info(
+    app_logger.info(
         "Transaction ID: %s, originator conversation id: %s, amount: %s, transaction time: %s saved.",
         update_values["transaction_id"],
         update_values["b2c_payment_name"],
