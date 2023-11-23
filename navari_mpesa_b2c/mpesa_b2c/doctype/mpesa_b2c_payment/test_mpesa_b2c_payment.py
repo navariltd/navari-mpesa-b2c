@@ -24,7 +24,10 @@ from ..mpesa_b2c_payment.mpesa_b2c_payment import (
     extract_transaction_values,
     get_result_details,
     handle_successful_result_response,
+    sanitise_phone_number,
     send_payload,
+    update_doctype_single_values,
+    validate_receiver_mobile_number,
 )
 
 SUCCESSFUL_TEST_RESULTS = {
@@ -422,3 +425,127 @@ class TestMPesaB2CPayment(FrappeTestCase):
 
         self.assertIsInstance(result, Document)
         self.assertEqual(result.name, mock_transaction_id)
+
+    def test_update_doctype_single_values(self) -> None:
+        """Tests the update_doctype_single_values() function from the b2c payment module"""
+        payment = frappe.db.get_value(
+            "MPesa B2C Payment",
+            {
+                "partyb": "254708993268",
+                "account_paid_from": "Cash - NVR",
+                "account_paid_to": "Cash - NVR",
+            },
+            ["name", "occassion"],
+            as_dict=True,
+        )
+
+        self.assertEqual(payment.occassion, "Testing")
+
+        new_value = "Unit Testing"
+        update_doctype_single_values(
+            "MPesa B2C Payment", payment, "occassion", new_value
+        )
+
+        updated_payment = frappe.db.get_value(
+            "MPesa B2C Payment",
+            {
+                "partyb": "254708993268",
+                "account_paid_from": "Cash - NVR",
+                "account_paid_to": "Cash - NVR",
+                "occassion": new_value,
+            },
+            ["name", "occassion"],
+            as_dict=True,
+        )
+        self.assertIsNotNone(updated_payment)
+        self.assertEqual(updated_payment.occassion, new_value)
+
+    def test_validate_receiver_mobile_number(self) -> None:
+        """Tests the validate_receiver_mobile_number() from the b2c payment module"""
+        valid_phone_number1 = "254712345678"
+        valid_phone_number2 = "254112345678"
+        valid_phone_number3 = "254110123456"
+        valid_phone_number4 = "+254712345678"
+
+        invalid_phone_number2 = "2547123456789"
+        invalid_phone_number3 = "25471234567"
+        invalid_phone_number4 = "25471234567a"
+        invalid_phone_number5 = "25411345678901"
+        invalid_phone_number6 = "2541054321a"
+
+        self.assertTrue(validate_receiver_mobile_number(valid_phone_number1))
+        self.assertTrue(validate_receiver_mobile_number(valid_phone_number2))
+        self.assertTrue(validate_receiver_mobile_number(valid_phone_number3))
+        self.assertTrue(validate_receiver_mobile_number(valid_phone_number4))
+
+        self.assertFalse(validate_receiver_mobile_number(invalid_phone_number2))
+        self.assertFalse(validate_receiver_mobile_number(invalid_phone_number3))
+        self.assertFalse(validate_receiver_mobile_number(invalid_phone_number4))
+        self.assertFalse(validate_receiver_mobile_number(invalid_phone_number5))
+        self.assertFalse(validate_receiver_mobile_number(invalid_phone_number6))
+
+    def test_sanitise_phone_number(self) -> None:
+        """Tests the sanitise_phone_number() function from the b2c payment module"""
+        unsatinised_phone_number1 = "0712 345 678"
+        unsatinised_phone_number2 = "+254 712 345 678"
+
+        result1 = sanitise_phone_number(unsatinised_phone_number1)
+        result2 = sanitise_phone_number(unsatinised_phone_number2)
+
+        self.assertEqual(result1, "254712345678")
+        self.assertEqual(result2, "254712345678")
+
+    def test_make_payment(self) -> None:
+        """Tests the make_payment() function from the b2c payment module"""
+        with patch.object(
+            mpesa_b2c_payment, "get_decrypted_password"
+        ) as mock_password, patch.object(
+            mpesa_b2c_payment, "get_file_path"
+        ) as mock_certificate_file, patch.object(
+            mpesa_b2c_payment, "openssl_encrypt_encode"
+        ) as mock_security_credentials, patch.object(
+            mpesa_b2c_payment, "generate_payload"
+        ) as mock_payload, patch.object(
+            mpesa_b2c_payment.requests, "post"
+        ) as mock_response, patch.object(
+            mpesa_b2c_payment.frappe, "msgprint"
+        ) as mock_msgprint, patch.object(
+            mpesa_b2c_payment, "make_payment"
+        ):
+            mock_password.return_value = "password"
+            mock_certificate_file.return_value = "/path/to/certificate.pem"
+            certificate_file = mpesa_b2c_payment.get_certificate_file(
+                "/path/to/certificate.pem"
+            )
+
+            mock_security_credentials.return_value = "security_credentials".encode()
+            encoded_credentials = "security_credentials".encode()
+            credentials = mpesa_b2c_payment.openssl_encrypt_encode(
+                "password".encode(), certificate_file
+            )
+
+            mock_payload.return_value = {"payload": "payload"}
+            payload = mpesa_b2c_payment.generate_payload("", {}, credentials.decode())
+
+            mock_response.return_value.text = {"message": "Success"}
+            mock_response.return_value.status_code = 200
+
+            send_payload(payload, "token", "http://example.org/get-payload")
+
+            mpesa_b2c_payment.make_payment("token", "Document", {}, "Document")
+
+            self.assertEqual(credentials, encoded_credentials)
+            self.assertIsInstance(payload, dict)
+            self.assertDictEqual(payload, {"payload": "payload"})
+            self.assertIsInstance(mock_response.return_value.text, dict)
+            self.assertEqual(mock_response.return_value.text["message"], "Success")
+
+            # Retrieving msgprint value after calling make_payment
+            msgprint_args, _ = mock_msgprint.call_args
+            self.assertEqual(msgprint_args[0], "Payment Request Successful")
+
+            mock_msgprint.assert_called_once_with(
+                "Payment Request Successful",
+                title="Successful",
+                indicator="green",
+            )

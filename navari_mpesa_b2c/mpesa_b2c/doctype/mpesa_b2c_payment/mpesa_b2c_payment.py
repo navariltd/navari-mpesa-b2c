@@ -28,7 +28,7 @@ from ..custom_exceptions import (
 MPESA_B2C_SETTINGS_DOCTYPE: Final[str] = "MPesa B2C Settings"
 MPESA_B2C_PAYMENT_DOCTYPE: Final[str] = "MPesa B2C Payment"
 DARAJA_ACCESS_TOKENS_DOCTYPE: Final[str] = "Daraja Access Tokens"
-MPESA_B2C_PAYMENTS_TRANSACTIONS: Final[str] = "MPesa B2C Payments Transactions"
+MPESA_B2C_PAYMENTS_TRANSACTIONS_DOCTYPE: Final[str] = "MPesa B2C Payments Transactions"
 
 
 class MPesaB2CPayment(Document):
@@ -343,7 +343,7 @@ def handle_successful_result_response(results: dict) -> Document:
     )
 
     transaction = save_transaction_to_database(
-        MPESA_B2C_PAYMENTS_TRANSACTIONS, transaction_values
+        MPESA_B2C_PAYMENTS_TRANSACTIONS_DOCTYPE, transaction_values
     )
 
     frappe.response["transaction"] = transaction
