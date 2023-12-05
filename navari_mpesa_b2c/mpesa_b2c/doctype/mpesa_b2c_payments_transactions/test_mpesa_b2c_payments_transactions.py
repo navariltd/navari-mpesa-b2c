@@ -13,6 +13,19 @@ from ..custom_exceptions import InformationMismatchError
 ORIGINATOR_CONVERSATION_ID = str(uuid4())
 ORIGINATOR_CONVERSATION_ID_2 = str(uuid4())
 
+EXPENSE_ACCOUNT = frappe.db.sql(
+    """
+    select name
+    from `tabAccount`
+    where name like 'Expense%'"""
+)[-1][0]
+INCOME_ACCOUNT = frappe.db.sql(
+    """
+    select name
+    from `tabAccount`
+    where name like 'Income%'"""
+)[-1][0]
+
 
 def create_b2c_payment_transaction() -> None:
     """Create a valid b2c payment"""
@@ -20,16 +33,6 @@ def create_b2c_payment_transaction() -> None:
         return
 
     frappe.set_user("Administrator")
-
-    available_cash_accounts = frappe.db.sql(
-        """
-        SELECT name
-        FROM `tabAccount`
-        WHERE account_type = 'Cash'
-            and account_currency = 'KES'
-        """,
-        as_dict=True,
-    )
 
     doc = frappe.get_doc(
         {
@@ -42,8 +45,8 @@ def create_b2c_payment_transaction() -> None:
             "amount": 10,
             "occassion": "Testing",
             "party_type": "Employee",
-            "account_paid_from": available_cash_accounts[0].name,
-            "account_paid_to": available_cash_accounts[0].name,
+            "account_paid_from": EXPENSE_ACCOUNT,
+            "account_paid_to": INCOME_ACCOUNT,
         }
     ).insert()
 
@@ -58,8 +61,8 @@ def create_b2c_payment_transaction() -> None:
             "amount": 10,
             "occassion": "Testing",
             "party_type": "Employee",
-            "account_paid_from": available_cash_accounts[0].name,
-            "account_paid_to": available_cash_accounts[0].name,
+            "account_paid_from": EXPENSE_ACCOUNT,
+            "account_paid_to": INCOME_ACCOUNT,
         }
     ).insert()
 
@@ -67,7 +70,7 @@ def create_b2c_payment_transaction() -> None:
         {
             "doctype": "MPesa B2C Payments Transactions",
             "b2c_payment_name": doc.name,
-            "transaction_id": 951753654,
+            "transaction_id": random.randint(100000000, 100000000000),
             "transaction_amount": 10,
             "receiver_public_name": "Jane Doe",
             "recipient_is_registered_customer": "Y",
@@ -75,8 +78,8 @@ def create_b2c_payment_transaction() -> None:
             "working_acct_avlbl_funds": 1000000,
             "utility_acct_avlbl_funds": 10000000,
             "transaction_completed_datetime": datetime.datetime.now(),
-            "account_paid_from": available_cash_accounts[0].name,
-            "account_paid_to": available_cash_accounts[0].name,
+            "account_paid_from": EXPENSE_ACCOUNT,
+            "account_paid_to": INCOME_ACCOUNT,
         }
     ).insert()
 
@@ -105,7 +108,7 @@ class TestMPesaB2CPaymentsTransactions(FrappeTestCase):
                 {
                     "doctype": "MPesa B2C Payments Transactions",
                     "b2c_payment_name": payment.name,
-                    "transaction_id": random.randint(1000000, 100000000),
+                    "transaction_id": random.randint(100000000, 100000000000),
                     "transaction_amount": 9.9999,
                     "receiver_public_name": "Jane Doe",
                     "recipient_is_registered_customer": "Y",
@@ -129,7 +132,7 @@ class TestMPesaB2CPaymentsTransactions(FrappeTestCase):
                 {
                     "doctype": "MPesa B2C Payments Transactions",
                     "b2c_payment_name": payment.name,
-                    "transaction_id": random.randint(1000000, 100000000),
+                    "transaction_id": random.randint(100000000, 100000000000),
                     "transaction_amount": 9.9999,
                     "receiver_public_name": "Jane Doe",
                     "recipient_is_registered_customer": "Y",
@@ -147,7 +150,7 @@ class TestMPesaB2CPaymentsTransactions(FrappeTestCase):
                 {
                     "doctype": "MPesa B2C Payments Transactions",
                     "b2c_payment_name": "MPESA-B2C-0000",
-                    "transaction_id": random.randint(1000000, 100000000),
+                    "transaction_id": random.randint(100000000, 100000000000),
                     "transaction_amount": 9.9999,
                     "receiver_public_name": "Jane Doe",
                     "recipient_is_registered_customer": "Y",

@@ -69,6 +69,20 @@ SUCCESSFUL_TEST_RESULTS = {
 }
 
 
+EXPENSE_ACCOUNT = frappe.db.sql(
+    """
+    select name
+    from `tabAccount`
+    where name like 'Expense%'"""
+)[-1][0]
+INCOME_ACCOUNT = frappe.db.sql(
+    """
+    select name
+    from `tabAccount`
+    where name like 'Income%'"""
+)[-1][0]
+
+
 def create_mpesa_b2c_payment() -> None:
     """Create a valid b2c payment"""
     if frappe.flags.test_events_created:
@@ -86,8 +100,8 @@ def create_mpesa_b2c_payment() -> None:
             "amount": 10,
             "occassion": "Testing",
             "party_type": "Supplier",
-            "account_paid_from": "Cash - NVR",
-            "account_paid_to": "Cash - NVR",
+            "account_paid_from": EXPENSE_ACCOUNT,
+            "account_paid_to": INCOME_ACCOUNT,
         }
     ).insert()
 
@@ -116,8 +130,8 @@ class TestMPesaB2CPayment(FrappeTestCase):
                     "amount": 10,
                     "occassion": "Testing",
                     "party_type": "Supplier",
-                    "account_paid_from": "Cash - NVR",
-                    "account_paid_to": "Debtors - NVR",
+                    "account_paid_from": EXPENSE_ACCOUNT,
+                    "account_paid_to": INCOME_ACCOUNT,
                 }
             ).insert()
 
@@ -131,8 +145,8 @@ class TestMPesaB2CPayment(FrappeTestCase):
                     "amount": 10,
                     "occassion": "Testing",
                     "party_type": "Supplier",
-                    "account_paid_from": "Cash - NVR",
-                    "account_paid_to": "Debtors - NVR",
+                    "account_paid_from": EXPENSE_ACCOUNT,
+                    "account_paid_to": INCOME_ACCOUNT,
                 }
             ).insert()
 
@@ -146,8 +160,8 @@ class TestMPesaB2CPayment(FrappeTestCase):
                     "amount": 10,
                     "occassion": "Testing",
                     "party_type": "Supplier",
-                    "account_paid_from": "Cash - NVR",
-                    "account_paid_to": "Debtors - NVR",
+                    "account_paid_from": EXPENSE_ACCOUNT,
+                    "account_paid_to": INCOME_ACCOUNT,
                 }
             ).insert()
 
@@ -161,8 +175,8 @@ class TestMPesaB2CPayment(FrappeTestCase):
                     "amount": 10,
                     "occassion": "Testing",
                     "party_type": "Supplier",
-                    "account_paid_from": "Cash - NVR",
-                    "account_paid_to": "Debtors - NVR",
+                    "account_paid_from": EXPENSE_ACCOUNT,
+                    "account_paid_to": INCOME_ACCOUNT,
                 }
             ).insert()
 
@@ -204,8 +218,8 @@ class TestMPesaB2CPayment(FrappeTestCase):
                     "amount": 9.99,
                     "occassion": "Testing",
                     "party_type": "Supplier",
-                    "account_paid_from": "Cash - NVR",
-                    "account_paid_to": "Debtors - NVR",
+                    "account_paid_from": EXPENSE_ACCOUNT,
+                    "account_paid_to": INCOME_ACCOUNT,
                 }
             ).insert()
 
@@ -223,8 +237,8 @@ class TestMPesaB2CPayment(FrappeTestCase):
                     "amount": large_number,
                     "occassion": "Testing",
                     "party_type": "Supplier",
-                    "account_paid_from": "Cash - NVR",
-                    "account_paid_to": "Debtors - NVR",
+                    "account_paid_from": EXPENSE_ACCOUNT,
+                    "account_paid_to": INCOME_ACCOUNT,
                 }
             ).insert()
 
@@ -240,8 +254,8 @@ class TestMPesaB2CPayment(FrappeTestCase):
                 "amount": 10,
                 "occassion": "Testing",
                 "party_type": "Supplier",
-                "account_paid_from": "Cash - NVR",
-                "account_paid_to": "Debtors - NVR",
+                "account_paid_from": EXPENSE_ACCOUNT,
+                "account_paid_to": INCOME_ACCOUNT,
             }
         ).insert()
 
@@ -260,8 +274,8 @@ class TestMPesaB2CPayment(FrappeTestCase):
                     "amount": 10,
                     "occassion": "Testing",
                     "party_type": "Supplier",
-                    "account_paid_from": "Cash - NVR",
-                    "account_paid_to": "Debtors - NVR",
+                    "account_paid_from": EXPENSE_ACCOUNT,
+                    "account_paid_to": INCOME_ACCOUNT,
                 }
             ).insert()
 
@@ -279,8 +293,8 @@ class TestMPesaB2CPayment(FrappeTestCase):
                 "amount": 10,
                 "occassion": "Testing",
                 "party_type": "Supplier",
-                "account_paid_from": "Cash - NVR",
-                "account_paid_to": "Debtors - NVR",
+                "account_paid_from": EXPENSE_ACCOUNT,
+                "account_paid_to": INCOME_ACCOUNT,
             }
         ).insert()
 
@@ -298,8 +312,8 @@ class TestMPesaB2CPayment(FrappeTestCase):
                     "amount": 10,
                     "occassion": "Testing",
                     "party_type": "Supplier",
-                    "account_paid_from": "Cash - NVR",
-                    "account_paid_to": "Debtors - NVR",
+                    "account_paid_from": EXPENSE_ACCOUNT,
+                    "account_paid_to": INCOME_ACCOUNT,
                 }
             ).insert()
             frappe.get_doc(
@@ -311,8 +325,8 @@ class TestMPesaB2CPayment(FrappeTestCase):
                     "amount": 10,
                     "occassion": "Testing",
                     "party_type": "Employee",
-                    "account_paid_from": "Cash - NVR",
-                    "account_paid_to": "Debtors - NVR",
+                    "account_paid_from": EXPENSE_ACCOUNT,
+                    "account_paid_to": INCOME_ACCOUNT,
                 }
             ).insert()
 
@@ -432,8 +446,8 @@ class TestMPesaB2CPayment(FrappeTestCase):
             "MPesa B2C Payment",
             {
                 "partyb": "254708993268",
-                "account_paid_from": "Cash - NVR",
-                "account_paid_to": "Cash - NVR",
+                "account_paid_from": EXPENSE_ACCOUNT,
+                "account_paid_to": INCOME_ACCOUNT,
             },
             ["name", "occassion"],
             as_dict=True,
@@ -450,8 +464,8 @@ class TestMPesaB2CPayment(FrappeTestCase):
             "MPesa B2C Payment",
             {
                 "partyb": "254708993268",
-                "account_paid_from": "Cash - NVR",
-                "account_paid_to": "Cash - NVR",
+                "account_paid_from": EXPENSE_ACCOUNT,
+                "account_paid_to": INCOME_ACCOUNT,
                 "occassion": new_value,
             },
             ["name", "occassion"],

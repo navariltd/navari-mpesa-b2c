@@ -77,14 +77,14 @@ class MPesaB2CPaymentsTransactions(Document):
                 "accounts",
                 {
                     "account": self.account_paid_from,
-                    "debit_in_account_currency": self.transaction_amount,
+                    "credit_in_account_currency": self.transaction_amount,
                 },
             )
             journal_entry.append(
                 "accounts",
                 {
                     "account": self.account_paid_to,
-                    "credit_in_account_currency": self.transaction_amount,
+                    "debit_in_account_currency": self.transaction_amount,
                     "party_type": self.fetched_b2c_payment.party_type,
                     "party": self.fetched_b2c_payment.party,
                 },
