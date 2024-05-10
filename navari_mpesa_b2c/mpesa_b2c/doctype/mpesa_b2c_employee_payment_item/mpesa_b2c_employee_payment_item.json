@@ -1,6 +1,7 @@
 {
   "actions": [],
   "allow_rename": 1,
+  "autoname": "hash",
   "creation": "2024-05-10 10:19:22.013333",
   "doctype": "DocType",
   "editable_grid": 1,
@@ -8,9 +9,11 @@
   "field_order": [
     "reference_doctype",
     "record",
+    "record_amount",
     "column_break_guwr",
     "receiver_name",
-    "partyb"
+    "partyb",
+    "amount"
   ],
   "fields": [
     {
@@ -42,15 +45,32 @@
       "fieldtype": "Data",
       "in_list_view": 1,
       "label": "Contacts"
+    },
+    {
+      "fieldname": "amount",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "label": "Payment Amount",
+      "non_negative": 1,
+      "precision": "2",
+      "reqd": 1
+    },
+    {
+      "fieldname": "record_amount",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "label": "Record Amount",
+      "precision": "2"
     }
   ],
   "index_web_pages_for_search": 1,
   "istable": 1,
   "links": [],
-  "modified": "2024-05-10 12:41:01.945598",
+  "modified": "2024-05-10 17:06:43.421200",
   "modified_by": "Administrator",
   "module": "MPesa B2C",
   "name": "MPesa B2C Employee Payment Item",
+  "naming_rule": "Random",
   "owner": "Administrator",
   "permissions": [],
   "sort_field": "modified",
