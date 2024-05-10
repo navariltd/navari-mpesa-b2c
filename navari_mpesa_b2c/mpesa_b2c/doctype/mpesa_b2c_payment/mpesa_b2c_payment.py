@@ -42,25 +42,6 @@ class MPesaB2CPayment(Document):
             # Generate random UUID4
             self.originatorconversationid = str(uuid4())
 
-        if self.partyb:
-            # Validate mobile number of receiver, i.e. PartyB
-            receiver_number = sanitise_phone_number(self.partyb)
-
-            if not validate_receiver_mobile_number(receiver_number):
-                self.error = (
-                    "The Receiver (mobile number) entered is incorrect for payment: %s."
-                )
-
-                app_logger.error(self.error, self.name)
-                raise InvalidReceiverMobileNumberError(self.error, self.name)
-
-        if self.amount < 10:
-            # Validates payment amount
-            self.error = "Amount entered is less than the least acceptable amount of Kshs. 10, for payment: %s"
-
-            app_logger.error(self.error, self.name)
-            raise InsufficientPaymentAmountError(self.error, self.name)
-
         if not self.status:
             self.status = "Not Initiated"
 

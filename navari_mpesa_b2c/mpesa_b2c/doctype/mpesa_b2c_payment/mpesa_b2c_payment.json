@@ -18,13 +18,10 @@
     "occassion",
     "receiver_details_section",
     "party_type",
-    "party",
-    "party_name",
-    "partyb",
-    "doctype_to_pay_against",
     "column_break_rc4l",
     "start_date",
     "end_date",
+    "doctype_to_pay_against",
     "section_break_rrbq",
     "items",
     "accounts_section",
@@ -35,7 +32,8 @@
     "status",
     "error_code",
     "column_break_oy1c",
-    "error_description"
+    "error_description",
+    "amended_from"
   ],
   "fields": [
     {
@@ -93,19 +91,10 @@
       "fieldtype": "Column Break"
     },
     {
-      "description": "Format: 2547xxxxxxxx or 25410xxxxxxx or 25411xxxxxxxx",
-      "fieldname": "partyb",
-      "fieldtype": "Data",
-      "in_list_view": 1,
-      "label": "Receiver",
-      "reqd": 1
-    },
-    {
       "fieldname": "amount",
       "fieldtype": "Float",
       "in_list_view": 1,
-      "label": "Amount",
-      "reqd": 1
+      "label": "Amount"
     },
     {
       "fieldname": "occassion",
@@ -125,20 +114,6 @@
       "label": "Party Type",
       "options": "DocType",
       "reqd": 1
-    },
-    {
-      "depends_on": "eval:doc.party_type",
-      "fieldname": "party",
-      "fieldtype": "Dynamic Link",
-      "label": "Party",
-      "mandatory_depends_on": "eval:doc.party_type",
-      "options": "party_type"
-    },
-    {
-      "depends_on": "eval:doc.party_type",
-      "fieldname": "party_name",
-      "fieldtype": "Data",
-      "label": "Party Name"
     },
     {
       "collapsible": 1,
@@ -196,22 +171,23 @@
       "depends_on": "eval:doc.party_type;",
       "fieldname": "section_break_rrbq",
       "fieldtype": "Section Break",
-      "label": "Employee Payments",
-      "mandatory_depends_on": "eval:doc.party_type;"
+      "label": "Employee Payments"
     },
     {
-      "depends_on": "eval:doc.party_type === \"Employee\";",
+      "default": "Today",
+      "depends_on": "eval:doc.party_type;",
       "fieldname": "start_date",
       "fieldtype": "Date",
       "label": "Start Date",
-      "mandatory_depends_on": "eval:doc.party_type === \"Employee\";"
+      "mandatory_depends_on": "eval:doc.party_type;"
     },
     {
-      "depends_on": "eval:doc.party_type === \"Employee\";",
+      "default": "Today",
+      "depends_on": "eval:doc.party_type;",
       "fieldname": "end_date",
       "fieldtype": "Date",
       "label": "End Date",
-      "mandatory_depends_on": "eval:doc.party_type === \"Employee\";"
+      "mandatory_depends_on": "eval:doc.party_type;"
     },
     {
       "fieldname": "doctype_to_pay_against",
@@ -225,11 +201,22 @@
       "fieldtype": "Table",
       "label": "Items",
       "options": "MPesa B2C Employee Payment Item"
+    },
+    {
+      "fieldname": "amended_from",
+      "fieldtype": "Link",
+      "label": "Amended From",
+      "no_copy": 1,
+      "options": "MPesa B2C Payment",
+      "print_hide": 1,
+      "read_only": 1,
+      "search_index": 1
     }
   ],
   "index_web_pages_for_search": 1,
+  "is_submittable": 1,
   "links": [],
-  "modified": "2024-05-10 11:52:17.934998",
+  "modified": "2024-05-10 15:06:54.843669",
   "modified_by": "Administrator",
   "module": "MPesa B2C",
   "name": "MPesa B2C Payment",
@@ -252,5 +239,6 @@
   "sort_field": "modified",
   "sort_order": "DESC",
   "states": [],
-  "track_changes": 1
+  "track_changes": 1,
+  "track_views": 1
 }
