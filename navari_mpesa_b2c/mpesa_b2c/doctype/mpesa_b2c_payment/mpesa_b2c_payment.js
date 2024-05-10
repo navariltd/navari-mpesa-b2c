@@ -87,16 +87,68 @@ frappe.ui.form.on("MPesa B2C Payment", {
 
     await fetchAndSetContactDetails(frm);
   },
-  party_type: function (frm) {
+  commandid: function (frm) {
+    frm.set_value("party_type", "");
     frm.set_value("party", "");
 
-    if (frm.doc.party_type === "Supplier") {
-      frm.set_value("commandid", "BusinessPayment");
-    } else if (frm.doc.party_type === "Employee") {
-      frm.set_value("commandid", "SalaryPayment");
-    } else {
-      frm.set_value("commandid", "");
+    if (frm.doc.commandid === "SalaryPayment") {
+      frm.set_value("party_type", "Employee");
     }
+  },
+  party_type: function (frm) {
+    frm.set_query("doctype_to_pay_against", function () {
+      const doctypeFieldsList =
+        frm.doc.party_type === "Employee"
+          ? ["Salary Slip", "Expense Claim", "Employee Advances"]
+          : ["Purchase Invoice", "Payment Entry"];
+
+      return {
+        filters: [["DocType", "name", "in", doctypeFieldsList]],
+      };
+    });
+  },
+  doctype_to_pay_against: function (frm) {
+    const doctype = frm.doc.doctype_to_pay_against;
+    frappe.db
+      .get_list(doctype, {
+        fields: ["*"],
+        filters: {
+          creation: ["between", frm.doc.start_date, frm.doc.end_date],
+        },
+      })
+      .then((response) => {
+        if (!response.length) {
+          throw new Error("No Data Fetched");
+        } else {
+          response.forEach(async (data) => {
+            const contact = await frappe.db.get_value(
+              "Employee",
+              { name: data.employee },
+              ["cell_number"]
+            );
+
+            // Update fields of child table with filtered data
+            const row = frm.add_child("items");
+            frappe.model.set_value(row.doctype, row.name, {
+              reference_doctype: doctype,
+              record: data.name,
+              receiver_name: data.employee,
+              partyb: contact.message?.cell_number,
+            });
+            cur_frm.refresh_fields("items");
+          });
+        }
+      })
+      .catch((error) => {
+        if (error.message === "No Data Fetched")
+          frappe.msgprint({
+            message: __(
+              `No records fetched for doctype <b>${doctype}</b> with filters specified`
+            ),
+            indicator: "red",
+            title: "Error",
+          });
+      });
   },
 });
 

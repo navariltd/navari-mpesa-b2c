@@ -10,22 +10,27 @@
     "naming_series",
     "section_break_pujd",
     "originatorconversationid",
-    "receiver_details_section",
-    "party_type",
-    "party",
-    "column_break_rc4l",
-    "party_name",
-    "partyb",
-    "accounts_section",
-    "account_paid_from",
-    "column_break_nsjt",
-    "account_paid_to",
     "transaction_details_section",
     "commandid",
     "remarks",
     "column_break_jg71",
     "amount",
     "occassion",
+    "receiver_details_section",
+    "party_type",
+    "party",
+    "party_name",
+    "partyb",
+    "doctype_to_pay_against",
+    "column_break_rc4l",
+    "start_date",
+    "end_date",
+    "section_break_rrbq",
+    "items",
+    "accounts_section",
+    "account_paid_from",
+    "column_break_nsjt",
+    "account_paid_to",
     "payment_status_and_errors_section",
     "status",
     "error_code",
@@ -126,6 +131,7 @@
       "fieldname": "party",
       "fieldtype": "Dynamic Link",
       "label": "Party",
+      "mandatory_depends_on": "eval:doc.party_type",
       "options": "party_type"
     },
     {
@@ -185,11 +191,45 @@
     {
       "fieldname": "column_break_oy1c",
       "fieldtype": "Column Break"
+    },
+    {
+      "depends_on": "eval:doc.party_type;",
+      "fieldname": "section_break_rrbq",
+      "fieldtype": "Section Break",
+      "label": "Employee Payments",
+      "mandatory_depends_on": "eval:doc.party_type;"
+    },
+    {
+      "depends_on": "eval:doc.party_type === \"Employee\";",
+      "fieldname": "start_date",
+      "fieldtype": "Date",
+      "label": "Start Date",
+      "mandatory_depends_on": "eval:doc.party_type === \"Employee\";"
+    },
+    {
+      "depends_on": "eval:doc.party_type === \"Employee\";",
+      "fieldname": "end_date",
+      "fieldtype": "Date",
+      "label": "End Date",
+      "mandatory_depends_on": "eval:doc.party_type === \"Employee\";"
+    },
+    {
+      "fieldname": "doctype_to_pay_against",
+      "fieldtype": "Link",
+      "label": "Doctype To Pay Against",
+      "options": "DocType",
+      "reqd": 1
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Items",
+      "options": "MPesa B2C Employee Payment Item"
     }
   ],
   "index_web_pages_for_search": 1,
   "links": [],
-  "modified": "2023-11-20 15:45:00.620824",
+  "modified": "2024-05-10 11:52:17.934998",
   "modified_by": "Administrator",
   "module": "MPesa B2C",
   "name": "MPesa B2C Payment",
