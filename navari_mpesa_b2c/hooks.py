@@ -1,10 +1,10 @@
 app_name = "navari_mpesa_b2c"
-app_title = "MPesa B2C"
+app_title = "Navari Mpesa Business to Customer (B2C) Disbursements Integration"
 app_publisher = "Navari Ltd"
-app_description = "MPesa B2C Integration for ERPNext"
+app_description = "Mpesa Business to Customer (B2C) Disbursements Integration with ERPNext by Navari Ltd"
 app_email = "solutions@navari.co.ke"
-app_license = "mit"
-# required_apps = []
+app_license = "GNU Affero General Public License v3.0"
+required_apps = ["frappe/erpnext/hrms"]
 
 # Includes in <head>
 # ------------------
