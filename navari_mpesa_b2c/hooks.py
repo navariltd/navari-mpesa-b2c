@@ -1,5 +1,5 @@
 app_name = "navari_mpesa_b2c"
-app_title = "Navari Mpesa Business to Customer (B2C) Disbursements Integration"
+app_title = "Navari Mpesa Disbursements Integration"
 app_publisher = "Navari Ltd"
 app_description = "Mpesa Business to Customer (B2C) Disbursements Integration with ERPNext by Navari Ltd"
 app_email = "solutions@navari.co.ke"
