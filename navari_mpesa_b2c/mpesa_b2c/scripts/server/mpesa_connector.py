@@ -6,6 +6,8 @@ from enum import Enum
 
 
 class URLS(Enum):
+    """URLS Constant Exporting class"""
+
     SANDBOX = "https://sandbox.safaricom.co.ke"
     PRODUCTION = "https://api.safaricom.co.ke"
 
