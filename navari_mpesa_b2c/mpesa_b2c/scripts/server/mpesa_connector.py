@@ -2,6 +2,12 @@ from datetime import datetime, timedelta
 
 import requests
 from requests.auth import HTTPBasicAuth
+from enum import Enum
+
+
+class URLS(Enum):
+    SANDBOX = "https://sandbox.safaricom.co.ke"
+    PRODUCTION = "https://api.safaricom.co.ke"
 
 
 class MpesaB2CConnector:
@@ -10,8 +16,6 @@ class MpesaB2CConnector:
         env: str = "sandbox",
         app_key: bytes | str | None = None,
         app_secret: bytes | str | None = None,
-        sandbox_url: str = "https://sandbox.safaricom.co.ke",
-        live_url: str = "https://api.safaricom.co.ke",
     ):
         """Setup configuration for Mpesa connector and generate new access token."""
         self.authentication_token = None
@@ -22,9 +26,9 @@ class MpesaB2CConnector:
         self.app_secret = app_secret
 
         if env == "sandbox":
-            self.base_url = sandbox_url
+            self.base_url = URLS.SANDBOX.value
         else:
-            self.base_url = live_url
+            self.base_url = URLS.PRODUCTION.value
 
     def authenticate(self) -> dict[str, str | datetime]:
         authenticate_uri = "/oauth/v1/generate?grant_type=client_credentials"
