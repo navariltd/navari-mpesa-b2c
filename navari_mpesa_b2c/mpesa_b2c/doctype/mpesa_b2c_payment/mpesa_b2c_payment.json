@@ -10,6 +10,8 @@
     "naming_series",
     "section_break_pujd",
     "originatorconversationid",
+    "column_break_cieu",
+    "mpesa_setting",
     "transaction_details_section",
     "commandid",
     "remarks",
@@ -27,7 +29,6 @@
     "accounts_section",
     "account_paid_from",
     "column_break_nsjt",
-    "account_paid_to",
     "payment_status_and_errors_section",
     "status",
     "error_code",
@@ -150,14 +151,6 @@
       "fieldtype": "Column Break"
     },
     {
-      "depends_on": "eval:doc.party_type",
-      "fieldname": "account_paid_to",
-      "fieldtype": "Link",
-      "label": "Account Paid To",
-      "options": "Account",
-      "reqd": 1
-    },
-    {
       "collapsible": 1,
       "fieldname": "payment_status_and_errors_section",
       "fieldtype": "Section Break",
@@ -211,12 +204,25 @@
       "print_hide": 1,
       "read_only": 1,
       "search_index": 1
+    },
+    {
+      "fieldname": "column_break_cieu",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "mpesa_setting",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Mpesa Setting",
+      "options": "Mpesa Settings",
+      "reqd": 1
     }
   ],
   "index_web_pages_for_search": 1,
   "is_submittable": 1,
   "links": [],
-  "modified": "2024-05-10 15:06:54.843669",
+  "modified": "2024-06-24 13:32:58.600763",
   "modified_by": "Administrator",
   "module": "MPesa B2C",
   "name": "MPesa B2C Payment",

@@ -88,8 +88,6 @@ frappe.ui.form.on("MPesa B2C Payment", {
     frm.set_value("items", []);
     const doctype = frm.doc.doctype_to_pay_against;
 
-    console.log(frm.doc.start_date, frm.doc.end_date);
-
     // Fetch relevant records and set relevant fields in items table
     frappe.db
       .get_list(doctype, {
@@ -110,11 +108,16 @@ frappe.ui.form.on("MPesa B2C Payment", {
               record: data.name,
               receiver_name: data.employee ?? data.supplier,
               partyb: null,
-              record_amount: data.base_rounded_total,
+              record_amount:
+                data.base_rounded_total ?? data.total_sanctioned_amount,
             };
 
             // Apply fetching contact strategy according to document
-            if (doctype === "Salary Slip") {
+            if (
+              doctype === "Salary Slip" ||
+              doctype === "Expense Claim" ||
+              doctype === "Employee Advance"
+            ) {
               const contact = await frappe.db.get_value(
                 "Employee",
                 { name: data.employee ?? null },
@@ -156,9 +159,32 @@ frappe.ui.form.on("MPesa B2C Payment", {
               `No records fetched for doctype <b>${doctype}</b> with the <b>date filters specified</b>`
             ),
             indicator: "red",
-            title: "Error",
+            title: "No Data Fetched",
           });
       });
+  },
+  mpesa_setting: function (frm) {
+    frappe.db.get_value(
+      "Company",
+      { name: frappe.boot.sysdefaults.company },
+      ["abbr"],
+      (companyAbbrResponse) => {
+        frappe.db.get_value(
+          "Account",
+          {
+            name: [
+              "like",
+              `Mpesa-${frm.doc.mpesa_setting} - ${companyAbbrResponse.abbr}`,
+            ],
+          },
+          ["name"],
+          (response) => {
+            frm.refresh_fields("account_paid_from");
+            frm.set_value("account_paid_from", response.name);
+          }
+        );
+      }
+    );
   },
 });
 
