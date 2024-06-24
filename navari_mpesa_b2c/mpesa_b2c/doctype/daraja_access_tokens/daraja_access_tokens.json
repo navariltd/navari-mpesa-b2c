@@ -7,10 +7,13 @@
   "editable_grid": 1,
   "engine": "InnoDB",
   "field_order": [
+    "associated_settings",
+    "section_break_ruav",
     "access_token",
-    "token_fetch_time",
     "column_break_snir",
-    "expiry_time"
+    "expiry_time",
+    "token_fetch_time",
+    "amended_from"
   ],
   "fields": [
     {
@@ -18,13 +21,15 @@
       "fieldtype": "Password",
       "in_list_view": 1,
       "label": "Access Token",
-      "reqd": 1
+      "mandatory_depends_on": "eval:(doc.associated_settings);"
     },
     {
       "fieldname": "token_fetch_time",
       "fieldtype": "Datetime",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
       "label": "Token Fetch Time",
-      "reqd": 1
+      "mandatory_depends_on": "eval:(doc.associated_settings);"
     },
     {
       "fieldname": "column_break_snir",
@@ -34,13 +39,38 @@
       "fieldname": "expiry_time",
       "fieldtype": "Datetime",
       "in_list_view": 1,
+      "in_standard_filter": 1,
       "label": "Expiry",
+      "mandatory_depends_on": "eval:(doc.associated_settings);"
+    },
+    {
+      "fieldname": "associated_settings",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Associated Settings",
+      "options": "Mpesa Settings",
       "reqd": 1
+    },
+    {
+      "fieldname": "section_break_ruav",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "amended_from",
+      "fieldtype": "Link",
+      "label": "Amended From",
+      "no_copy": 1,
+      "options": "Daraja Access Tokens",
+      "print_hide": 1,
+      "read_only": 1,
+      "search_index": 1
     }
   ],
   "index_web_pages_for_search": 1,
+  "is_submittable": 1,
   "links": [],
-  "modified": "2023-11-15 10:42:44.625615",
+  "modified": "2024-06-21 12:30:57.382881",
   "modified_by": "Administrator",
   "module": "MPesa B2C",
   "name": "Daraja Access Tokens",
