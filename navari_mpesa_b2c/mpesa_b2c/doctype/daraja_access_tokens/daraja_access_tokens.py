@@ -31,6 +31,6 @@ class DarajaAccessTokens(Document):
         auth_response = MpesaB2CConnector(
             app_key=mpesa_setting.consumer_key,
             app_secret=mpesa_setting.get_password("consumer_secret"),
-        ).authenticate()
+        ).authenticate(setting=mpesa_setting.name)
 
         return auth_response
