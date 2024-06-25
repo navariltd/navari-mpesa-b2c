@@ -2,7 +2,6 @@
 # For license information, please see license.txt
 
 import re
-from uuid import uuid4
 
 import frappe
 from frappe.model.document import Document
@@ -20,10 +19,6 @@ class MPesaB2CPayment(Document):
         """Validations"""
         self.error = ""
 
-        if not self.originatorconversationid:
-            # Generate random UUID4
-            self.originatorconversationid = str(uuid4())
-
         if self.party_type == "Employee":
             if self.commandid != "SalaryPayment":
                 self.error = "Party Type 'Employee' requires Command ID 'SalaryPayment'"
@@ -37,6 +32,11 @@ class MPesaB2CPayment(Document):
                 )
                 app_logger.error(self.error)
                 raise InformationMismatchError(self.error)
+
+        if self.items:
+            # Perform validations for child table records
+            for item in self.items:
+                item.validate()
 
     def on_submit(self) -> bool:
         setting: Document = frappe.get_doc(
@@ -62,7 +62,7 @@ class MPesaB2CPayment(Document):
                         Setting=setting.name,
                         ConsumerKey=setting.consumer_key,
                         ConsumerSecret=setting.get_password("consumer_secret"),
-                        OriginatorConversationID=self.originatorconversationid,  # Refactor this out of this doctype
+                        OriginatorConversationID=item.originator_conversation_id,  # Refactor this out of this doctype
                         InitiatorName=setting.initiator_name,
                         SecurityCredential=setting.security_credential,
                         CommandID=self.commandid,

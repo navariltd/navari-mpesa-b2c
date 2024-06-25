@@ -7,6 +7,8 @@
   "editable_grid": 1,
   "engine": "InnoDB",
   "field_order": [
+    "originator_conversation_id",
+    "section_break_erqv",
     "reference_doctype",
     "record",
     "record_amount",
@@ -61,12 +63,23 @@
       "in_list_view": 1,
       "label": "Record Amount",
       "precision": "2"
+    },
+    {
+      "fieldname": "originator_conversation_id",
+      "fieldtype": "Data",
+      "label": "Originator Conversation ID",
+      "no_copy": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_break_erqv",
+      "fieldtype": "Section Break"
     }
   ],
   "index_web_pages_for_search": 1,
   "istable": 1,
   "links": [],
-  "modified": "2024-05-10 17:06:43.421200",
+  "modified": "2024-06-25 09:19:17.431995",
   "modified_by": "Administrator",
   "module": "MPesa B2C",
   "name": "MPesa B2C Employee Payment Item",

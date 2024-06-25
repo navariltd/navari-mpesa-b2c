@@ -3,57 +3,6 @@
 
 frappe.ui.form.on("MPesa B2C Payment", {
   refresh: function (frm) {
-    if (
-      frm.doc.docstatus === 1 &&
-      (frm.doc.status === "Not Initiated" || frm.doc.status === "Timed-Out")
-    ) {
-      // Only render the Initiate Payment button if document is saved, and
-      // payment status is "Not Initiated" or "Timed-Out"
-      frm.add_custom_button(
-        "Initiate Payment",
-        async function () {
-          frappe.call({
-            method:
-              "navari_mpesa_b2c.mpesa_b2c.doctype.mpesa_b2c_payment.mpesa_b2c_payment.initiate_payment",
-            args: {
-              // Create request with a partial payload
-              partial_payload: {
-                name: frm.doc.name,
-                OriginatorConversationID: frm.doc.originatorconversationid,
-                CommandID: frm.doc.commandid,
-                Amount: frm.doc.amount,
-                PartyB: frm.doc.partyb,
-                Remarks: frm.doc.remarks,
-                Occassion: frm.doc.occassion,
-              },
-            },
-            callback: function (response) {
-              // Redirect upon response. Response received is success since error responses
-              // raise an HTTPError on the server-side
-              if (response.message === "No certificate file found in server") {
-                frappe.msgprint({
-                  title: __("Authentication Error"),
-                  indicator: "red",
-                  message: __(response.message),
-                });
-              } else if (response.message === "successful") {
-                location.reload();
-              } else {
-                // TODO: Add proper cases
-                frappe.msgprint(`${response}`);
-              }
-            },
-          });
-        },
-        __("MPesa Actions")
-      );
-    }
-
-    if (!frm.doc.originatorconversationid) {
-      // Set uuidv4 compliant string
-      frm.set_value("originatorconversationid", generateUUIDv4());
-    }
-
     // Set filters for party type field
     frm.set_query("party_type", function () {
       return {

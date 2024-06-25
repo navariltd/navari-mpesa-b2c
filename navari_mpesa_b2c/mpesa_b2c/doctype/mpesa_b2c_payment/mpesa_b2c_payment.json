@@ -9,8 +9,6 @@
   "field_order": [
     "naming_series",
     "section_break_pujd",
-    "originatorconversationid",
-    "column_break_cieu",
     "mpesa_setting",
     "transaction_details_section",
     "commandid",
@@ -46,22 +44,15 @@
     },
     {
       "fieldname": "section_break_pujd",
-      "fieldtype": "Section Break"
-    },
-    {
-      "description": "This is randomly generated. Do not attempt to change",
-      "fieldname": "originatorconversationid",
-      "fieldtype": "Data",
-      "in_list_view": 1,
-      "label": "Originator Conversation ID",
-      "read_only": 1,
-      "reqd": 1
+      "fieldtype": "Section Break",
+      "label": "Associated Mpesa Setting"
     },
     {
       "fieldname": "commandid",
       "fieldtype": "Select",
       "in_list_view": 1,
       "label": "Command ID",
+      "no_copy": 1,
       "options": "\nSalaryPayment\nBusinessPayment\nPromotionPayment",
       "reqd": 1
     },
@@ -143,6 +134,7 @@
       "fieldname": "account_paid_from",
       "fieldtype": "Link",
       "label": "Account Paid From",
+      "no_copy": 1,
       "options": "Account",
       "reqd": 1
     },
@@ -186,6 +178,7 @@
       "fieldname": "doctype_to_pay_against",
       "fieldtype": "Link",
       "label": "Doctype To Pay Against",
+      "no_copy": 1,
       "options": "DocType",
       "reqd": 1
     },
@@ -206,10 +199,6 @@
       "search_index": 1
     },
     {
-      "fieldname": "column_break_cieu",
-      "fieldtype": "Column Break"
-    },
-    {
       "fieldname": "mpesa_setting",
       "fieldtype": "Link",
       "in_list_view": 1,
@@ -222,7 +211,7 @@
   "index_web_pages_for_search": 1,
   "is_submittable": 1,
   "links": [],
-  "modified": "2024-06-24 13:32:58.600763",
+  "modified": "2024-06-25 09:16:51.120679",
   "modified_by": "Administrator",
   "module": "MPesa B2C",
   "name": "MPesa B2C Payment",
