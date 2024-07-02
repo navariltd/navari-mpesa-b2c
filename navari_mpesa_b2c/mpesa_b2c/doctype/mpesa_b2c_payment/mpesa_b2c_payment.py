@@ -1,7 +1,6 @@
 # Copyright (c) 2023, Navari Limited and contributors
 # For license information, please see license.txt
 
-import re
 
 import frappe
 from frappe.model.document import Document
@@ -38,7 +37,7 @@ class MPesaB2CPayment(Document):
             for item in self.items:
                 item.validate()
 
-    def on_submit(self) -> bool:
+    def on_submit(self) -> None:
         setting: Document = frappe.get_doc(
             "Mpesa Settings",
             {"payment_gateway_name": self.mpesa_setting, "api_type": "Disbursement"},
@@ -62,38 +61,14 @@ class MPesaB2CPayment(Document):
                         Setting=setting.name,
                         ConsumerKey=setting.consumer_key,
                         ConsumerSecret=setting.get_password("consumer_secret"),
-                        OriginatorConversationID=item.originator_conversation_id,  # Refactor this out of this doctype
+                        OriginatorConversationID=item.originator_conversation_id,
                         InitiatorName=setting.initiator_name,
                         SecurityCredential=setting.security_credential,
                         CommandID=self.commandid,
                         Amount=item.amount,
-                        PartyA=setting.business_shortcode,  # Consider this
+                        PartyA=setting.business_shortcode,  # TODO: Consider this
                         PartyB=item.partyb,
                         Remarks=self.remarks,
                         Occassion=self.occassion,
                     )
                 )
-
-
-def validate_receiver_mobile_number(receiver: str) -> bool:
-    """Validates the Receiver's mobile number"""
-    receiver = receiver.replace("+", "").strip()
-    pattern1 = re.compile(r"^2547\d{8}$")
-    pattern2 = re.compile(r"(25410|25411)\d{7}$")
-
-    if receiver.startswith("2547"):
-        return bool(pattern1.match(receiver))
-
-    return bool(pattern2.match(receiver))
-
-
-def sanitise_phone_number(phone_number: str) -> str:
-    """Sanitises a given phone_number string"""
-    phone_number = phone_number.replace("+", "").replace(" ", "")
-
-    regex = re.compile(r"^0\d{9}$")
-    if not regex.match(phone_number):
-        return phone_number
-
-    phone_number = "254" + phone_number[1:]
-    return phone_number
