@@ -5,9 +5,14 @@ import frappe
 import requests
 import json
 from requests.auth import HTTPBasicAuth
+from urllib.parse import urlparse
+from typing import Literal
 
 from ...utils.definitions import B2CRequestDefinition
-from ...utils.doctype_names import DARAJA_ACCESS_TOKENS_DOCTYPE, MPESA_B2C_PAYMENT_DOCTYPE
+from ...utils.doctype_names import (
+    DARAJA_ACCESS_TOKENS_DOCTYPE,
+    MPESA_B2C_PAYMENT_DOCTYPE,
+)
 from ...utils.helpers import save_access_token
 from frappe.utils.password import get_decrypted_password
 from frappe.utils import get_request_site_address
@@ -92,6 +97,7 @@ class MpesaB2CConnector:
                 "expiry_time": [">", datetime.now()],
             },
             ["name", "access_token"],
+            as_dict=True,
         )
 
         if not token:
@@ -105,73 +111,97 @@ class MpesaB2CConnector:
             ]
 
         else:
-            hashed_token = token[0]
+            bearer_token = get_decrypted_password(
+                DARAJA_ACCESS_TOKENS_DOCTYPE, token.name, "access_token"
+            )
 
-            bearer_token = get_decrypted_password(DARAJA_ACCESS_TOKENS_DOCTYPE, hashed_token, 'access_token')
+            saf_url = f"{self.base_url}/mpesa/b2c/v3/paymentrequest"
 
-            saf_url = "{}{}".format(self.base_url,'/mpesa/b2c/v3/paymentrequest')
+            callback_url = f"https://{urlparse(get_request_site_address(full_address=True)).hostname}/api/method/navari_mpesa_b2c.mpesa_b2c.scripts.server.mpesa_connector.results_callback_url"
 
-            callback_url = (get_request_site_address()
-                            + "/api/method/navari_mpesa_b2c.mpesa_b2c.scripts.server.mpesa_connector.results_callback_url")
+            payload = request_data.to_dict(
+                {
+                    "QueueTimeOutURL": callback_url,
+                    "ResultURL": callback_url,
+                }
+            )
 
-            payload = {
-                "OriginatorConversationID": request_data.OriginatorConversationID,
-                "InitiatorName": request_data.InitiatorName,
-                "SecurityCredential": request_data.SecurityCredential,
-                "CommandID": request_data.CommandID,
-                "Amount": request_data.Amount,
-                "PartyA": request_data.PartyA,
-                "PartyB": request_data.PartyB,
-                "Remarks": request_data.Remarks,
-                "QueueTimeOutURL":"https://example.com",
-                "ResultURL": callback_url,
-                "Occassion": request_data.Occassion
+            headers = {
+                "Authorization": f"Bearer {bearer_token}",
+                "Content-Type": "application/json",
             }
 
-            payload = json.dumps(payload)
+            # Create Integration Request
+            create_request_log(
+                data=payload,
+                is_remote_request=1,
+                service_name="Mpesa",
+                name=request_data.OriginatorConversationID,
+                error=None,
+                request_headers=headers,
+            )
+
             try:
                 response = requests.post(
                     saf_url,
-                    data=payload,
-                    headers={
-                    "Authorization": f"Bearer {bearer_token}",
-                    "Content-Type": "application/json",
-                    },
-                    timeout=60
+                    data=json.dumps(payload),
+                    headers=headers,
+                    timeout=60,
                 )
-                
+
                 response.raise_for_status()
-                    
-            except requests.HTTPError:
+
+            except requests.HTTPError as e:
+                update_integration_request(
+                    request_data.OriginatorConversationID,
+                    status="Failed",
+                    output=None,
+                    error=str(e),
+                )
                 frappe.throw("Exception encountered when sending payment request")
 
-            except requests.ConnectionError:
+            except requests.ConnectionError as e:
+                update_integration_request(
+                    request_data.OriginatorConversationID,
+                    status="Failed",
+                    output=None,
+                    error=str(e),
+                )
                 frappe.throw("Exception encountered when sending payment request")
-    
-            except Exception as e:
-                frappe.throw("An error occurred")
 
-            frappe.msgprint('Payment Request accepted for processing', title="Successful", indicator="green" )
+            frappe.msgprint(
+                "Payment Request accepted for processing",
+                title="Successful",
+                indicator="green",
+            )
 
-            response_dict = json.loads(response.text)
+            response = frappe._dict(response.json())
 
-            response = frappe._dict(response_dict)
-
-             # Use ConversationID as the request name
-            if getattr(response, "ConversationID"):
-                req_name = getattr(response, "ConversationID", None)
-                error = None
-            else:
-                # Check error response
-                req_name = getattr(response, "requestId")
-                error = response
-
-            if not frappe.db.exists("Integration Request", req_name):
-                create_request_log(payload, "Host", "Mpesa", req_name, error)
-                
             return response
-        
+
+
 @frappe.whitelist(allow_guest=True)
 def results_callback_url(**kwargs) -> None:
-    frappe.msg_print("Callback received")
-    
+    result = frappe._dict(kwargs["Result"])
+
+    if frappe.db.exists("Integration Request", result.OriginatorConversationID):
+        update_integration_request(
+            result.OriginatorConversationID,
+            status="Completed",
+            output=result,
+            error=None,
+        )
+    frappe.msgprint("Callback received")
+
+
+def update_integration_request(
+    integration_request: str,
+    status: Literal["Completed", "Failed"],
+    output: str | None = None,
+    error: str | None = None,
+) -> None:
+    doc = frappe.get_doc("Integration Request", integration_request, for_update=True)
+    doc.status = status
+    doc.error = error
+    doc.output = output
+    doc.save(ignore_permissions=True)
